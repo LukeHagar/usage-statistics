@@ -1,6 +1,6 @@
 name: 'Usage Statistics Tracker'
 description: 'Track download statistics across multiple platforms (NPM, GitHub, PyPI, Homebrew, PowerShell, Postman, Go)'
-author: 'Your Name'
+author: 'LukeHagar'
 
 inputs:
   # Configuration

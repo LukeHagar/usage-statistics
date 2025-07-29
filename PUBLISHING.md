@@ -66,6 +66,7 @@ git push origin v1.0.0
 #### Basic Information
 - **Action name**: `usage-statistics-tracker`
 - **Description**: `Track download statistics across multiple platforms (NPM, GitHub, PyPI, Homebrew, PowerShell, Postman, Go)`
+- **Repository**: `LukeHagar/usage-statistics`
 - **Category**: Choose `Data` or `Utilities`
 - **Icon**: Upload a relevant icon (512x512px PNG recommended)
 - **Color**: Choose a brand color (e.g., `#0366d6` for blue)
@@ -97,6 +98,7 @@ Add relevant keywords:
 #### Action Name
 - **Marketplace name**: `Usage Statistics Tracker`
 - **Description**: `Comprehensive GitHub Action for tracking download statistics across multiple platforms with configurable outputs and README integration`
+- **Repository**: `LukeHagar/usage-statistics`
 
 #### Categories
 - **Primary category**: `Data`

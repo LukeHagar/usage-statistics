@@ -30,7 +30,7 @@ jobs:
       run: bun run action:build
 
     - name: Test action with preview mode
-      uses: ./
+      uses: LukeHagar/usage-statistics@main
       with:
         preview-mode: 'true'
         json-output-path: 'test-stats.json'

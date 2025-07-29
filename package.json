@@ -1,7 +1,12 @@
 {
   "name": "usage-statistics",
   "version": "1.0.0",
-  "description": "A Bun TypeScript script project",
+  "description": "A comprehensive GitHub Action for tracking download statistics across multiple platforms",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LukeHagar/usage-statistics.git"
+  },
+  "homepage": "https://github.com/LukeHagar/usage-statistics#readme",
   "main": "src/index.ts",
   "scripts": {
     "start": "bun run src/index.ts",
@@ -23,5 +28,22 @@
   },
   "engines": {
     "bun": ">=1.0.0"
-  }
+  },
+  "keywords": [
+    "github-action",
+    "statistics",
+    "analytics",
+    "downloads",
+    "npm",
+    "github",
+    "pypi",
+    "homebrew",
+    "powershell",
+    "postman",
+    "go",
+    "tracking",
+    "usage"
+  ],
+  "author": "LukeHagar",
+  "license": "MIT"
 }

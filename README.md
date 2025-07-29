@@ -18,7 +18,7 @@ A comprehensive GitHub Action for tracking download statistics across multiple p
 
 ```yaml
 - name: Usage Statistics Tracker
-  uses: your-username/usage-statistics@v1
+  uses: LukeHagar/usage-statistics@v1
   with:
     config: 'production'
     json-output-path: 'stats.json'
@@ -66,7 +66,7 @@ bun test
 #### Production Mode
 ```yaml
 - name: Usage Statistics Tracker
-  uses: your-username/usage-statistics@v1
+  uses: LukeHagar/usage-statistics@v1
   with:
     config: 'production'
 ```
@@ -74,7 +74,7 @@ bun test
 #### Development Mode
 ```yaml
 - name: Usage Statistics Tracker
-  uses: your-username/usage-statistics@v1
+  uses: LukeHagar/usage-statistics@v1
   with:
     config: 'development'
 ```
@@ -82,7 +82,7 @@ bun test
 #### Custom JSON Configuration
 ```yaml
 - name: Usage Statistics Tracker
-  uses: your-username/usage-statistics@v1
+  uses: LukeHagar/usage-statistics@v1
   with:
     config: '{"npmPackages": ["lodash", "axios"], "githubRepositories": ["microsoft/vscode"]}'
 ```
@@ -119,7 +119,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Usage Statistics Tracker
-      uses: your-username/usage-statistics@v1
+      uses: LukeHagar/usage-statistics@v1
       with:
         config: 'production'
         json-output-path: 'stats.json'
@@ -139,7 +139,7 @@ jobs:
 
 ```yaml
 - name: Usage Statistics Tracker
-  uses: your-username/usage-statistics@v1
+  uses: LukeHagar/usage-statistics@v1
   with:
     config: 'production'
     json-output-path: 'data/stats.json'
@@ -156,7 +156,7 @@ jobs:
 
 ```yaml
 - name: Test Usage Statistics
-  uses: your-username/usage-statistics@v1
+  uses: LukeHagar/usage-statistics@v1
   with:
     preview-mode: 'true'
     json-output-path: 'test-stats.json'
@@ -170,7 +170,7 @@ jobs:
 ```yaml
 - name: Usage Statistics Tracker
   id: stats
-  uses: your-username/usage-statistics@v1
+  uses: LukeHagar/usage-statistics@v1
   with:
     config: 'production'
     json-output-path: 'stats.json'
