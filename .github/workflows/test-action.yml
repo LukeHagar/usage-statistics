@@ -1,0 +1,52 @@
+name: Test GitHub Action
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test-action:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v1
+      with:
+        bun-version: latest
+
+    - name: Install dependencies
+      run: bun install
+
+    - name: Run tests
+      run: bun test
+
+    - name: Build action
+      run: bun run action:build
+
+    - name: Test action with preview mode
+      uses: ./
+      with:
+        preview-mode: 'true'
+        json-output-path: 'test-stats.json'
+        csv-output-path: 'test-stats.csv'
+        report-output-path: 'test-report.md'
+        update-readme: 'false'
+
+    - name: Check outputs
+      run: |
+        echo "Checking generated files..."
+        ls -la test-stats.* test-report.md || echo "No output files found (expected in preview mode)"
+        
+        echo "Checking action outputs..."
+        echo "JSON output: ${{ steps.test-action.outputs.json-output }}"
+        echo "CSV output: ${{ steps.test-action.outputs.csv-output }}"
+        echo "Report output: ${{ steps.test-action.outputs.report-output }}"
+        echo "Total downloads: ${{ steps.test-action.outputs.total-downloads }}"
+        echo "Unique packages: ${{ steps.test-action.outputs.unique-packages }}"
+        echo "Platforms tracked: ${{ steps.test-action.outputs.platforms-tracked }}" 

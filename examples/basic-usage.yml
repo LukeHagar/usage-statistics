@@ -1,0 +1,33 @@
+name: Update Usage Statistics
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Daily at midnight
+  workflow_dispatch:      # Allow manual triggering
+
+jobs:
+  update-stats:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Usage Statistics Tracker
+      uses: your-username/usage-statistics@v1
+      with:
+        config: 'production'
+        json-output-path: 'stats.json'
+        csv-output-path: 'stats.csv'
+        report-output-path: 'docs/usage-report.md'
+        update-readme: 'true'
+        readme-path: 'README.md'
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Commit and push changes
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add stats.json stats.csv docs/usage-report.md README.md
+        git commit -m "chore: update usage statistics [skip ci]" || echo "No changes to commit"
+        git push 

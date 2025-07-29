@@ -8,7 +8,9 @@
     "preview": "bun run src/index.ts --preview",
     "dev": "bun --watch src/index.ts",
     "build": "bun build src/index.ts --outdir dist",
-    "test": "bun test"
+    "test": "bun test",
+    "action:build": "bun build src/action.ts --outdir dist --target node --minify",
+    "action:test": "bun test && bun run action:build"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
@@ -16,6 +18,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@actions/core": "1.11.1",
     "@octokit/rest": "22.0.0"
   },
   "engines": {
