@@ -1,0 +1,24 @@
+{
+  "name": "usage-statistics",
+  "version": "1.0.0",
+  "description": "A Bun TypeScript script project",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "preview": "bun run src/index.ts --preview",
+    "dev": "bun --watch src/index.ts",
+    "build": "bun build src/index.ts --outdir dist",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "bun-types": "1.2.19",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@octokit/rest": "22.0.0"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  }
+}
