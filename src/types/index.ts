@@ -7,8 +7,6 @@ export interface BaseDownloadStats {
   packageName: string;
   version?: string;
   downloadCount: number;
-  timestamp: Date;
-  period?: 'daily' | 'weekly' | 'monthly' | 'total';
   metadata?: Record<string, any>;
 }
 
@@ -24,7 +22,6 @@ export interface DownloadStatsAggregator {
     totalDownloads: number;
     uniquePackages: number;
     platforms: string[];
-    timeRange: { start: Date; end: Date } | null;
   };
 }
 

@@ -3,12 +3,19 @@ import * as core from '@actions/core';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { UsageStatisticsManager } from './index';
-import { getConfig, validateConfig } from './config';
+import type { TrackingConfig } from './types';
 
 async function run() {
   try {
     // Get inputs
-    const configInput = core.getInput('config');
+    const npmPackages = core.getInput('npm-packages');
+    const githubRepositories = core.getInput('github-repositories');
+    const pypiPackages = core.getInput('pypi-packages');
+    const homebrewFormulas = core.getInput('homebrew-formulas');
+    const powershellModules = core.getInput('powershell-modules');
+    const postmanCollections = core.getInput('postman-collections');
+    const goModules = core.getInput('go-modules');
+    
     const jsonOutputPath = core.getInput('json-output-path');
     const csvOutputPath = core.getInput('csv-output-path');
     const reportOutputPath = core.getInput('report-output-path');
@@ -27,31 +34,35 @@ async function run() {
       process.env.POSTMAN_API_KEY = postmanApiKey;
     }
 
-    // Get configuration
-    let trackingConfig;
-    if (configInput === 'development' || configInput === 'production' || configInput === 'test') {
-      trackingConfig = getConfig(configInput as 'development' | 'production' | 'test');
-    } else {
-      // Try to parse as JSON
-      try {
-        trackingConfig = JSON.parse(configInput);
-      } catch (error) {
-        core.setFailed(`Invalid config input: ${configInput}. Must be 'development', 'production', 'test', or valid JSON.`);
-        return;
-      }
-    }
+    // Build configuration from inputs
+    const trackingConfig: TrackingConfig = {
+      enableLogging: true,
+      updateInterval: 60 * 60 * 1000, // 1 hour
+      npmPackages: npmPackages ? npmPackages.split(',').map(p => p.trim()).filter(p => p) : [],
+      githubRepos: githubRepositories ? githubRepositories.split(',').map(r => r.trim()).filter(r => r) : [],
+      pythonPackages: pypiPackages ? pypiPackages.split(',').map(p => p.trim()).filter(p => p) : [],
+      homebrewPackages: homebrewFormulas ? homebrewFormulas.split(',').map(f => f.trim()).filter(f => f) : [],
+      powershellModules: powershellModules ? powershellModules.split(',').map(m => m.trim()).filter(m => m) : [],
+      postmanCollections: postmanCollections ? postmanCollections.split(',').map(c => c.trim()).filter(c => c) : [],
+      goModules: goModules ? goModules.split(',').map(m => m.trim()).filter(m => m) : []
+    };
 
-    // Validate configuration
-    try {
-      validateConfig(trackingConfig);
-    } catch (error) {
-      core.setFailed(`Configuration validation failed: ${error}`);
-      return;
+    // Validate that at least one platform has packages configured
+    const totalPackages = (trackingConfig.npmPackages?.length || 0) + 
+                         (trackingConfig.githubRepos?.length || 0) + 
+                         (trackingConfig.pythonPackages?.length || 0) + 
+                         (trackingConfig.homebrewPackages?.length || 0) + 
+                         (trackingConfig.powershellModules?.length || 0) + 
+                         (trackingConfig.postmanCollections?.length || 0) + 
+                         (trackingConfig.goModules?.length || 0);
+
+    if (totalPackages === 0 && !previewMode) {
+      core.warning('No packages configured for tracking. Consider adding packages to track or enabling preview mode.');
     }
 
     // Create manager
     const manager = new UsageStatisticsManager(trackingConfig);
-
+    
     // Generate report
     let report;
     if (previewMode) {
@@ -61,10 +72,10 @@ async function run() {
       core.info('📊 Generating comprehensive usage statistics report...');
       report = await manager.generateComprehensiveReport();
     }
-
+    
     // Display report
     await manager.displayReport(report);
-
+    
     // Write JSON output
     if (jsonOutputPath) {
       const jsonContent = JSON.stringify(report, null, 2);
@@ -112,35 +123,27 @@ async function run() {
 }
 
 async function generateHumanReadableReport(report: any): Promise<string> {
-  let content = '# Usage Statistics Report\n\n';
+  let content = '# Usage Statistics Summary\n\n';
   content += `Generated on: ${new Date().toISOString()}\n\n`;
 
-  // Summary
-  content += '## Summary\n\n';
+  // Overall Summary
+  content += '## Overall Summary\n\n';
   content += `- **Total Downloads**: ${report.totalDownloads.toLocaleString()}\n`;
   content += `- **Unique Packages**: ${report.uniquePackages}\n`;
   content += `- **Platforms Tracked**: ${report.platforms.join(', ')}\n\n`;
 
-  // Platform Breakdown
-  content += '## Platform Breakdown\n\n';
+  // Platform Totals
+  content += '## Platform Totals\n\n';
   for (const [platform, data] of Object.entries(report.platformBreakdown)) {
     content += `### ${platform.toUpperCase()}\n`;
-    content += `- Downloads: ${data.totalDownloads.toLocaleString()}\n`;
-    content += `- Packages: ${data.uniquePackages}\n`;
-    content += `- Package List: ${data.packages.join(', ')}\n\n`;
+    content += `- **Downloads**: ${data.totalDownloads.toLocaleString()}\n`;
+    content += `- **Packages**: ${data.uniquePackages}\n\n`;
   }
 
-  // Top Packages
-  content += '## Top Packages\n\n';
-  report.topPackages.slice(0, 10).forEach((pkg: any, index: number) => {
+  // Package Rankings
+  content += '## Package Rankings\n\n';
+  report.topPackages.forEach((pkg: any, index: number) => {
     content += `${index + 1}. **${pkg.name}** (${pkg.platform}) - ${pkg.downloads.toLocaleString()} downloads\n`;
-  });
-  content += '\n';
-
-  // Recent Activity
-  content += '## Recent Activity\n\n';
-  report.recentActivity.slice(0, 5).forEach((activity: any) => {
-    content += `- **${activity.packageName}** (${activity.platform}) - ${activity.downloads.toLocaleString()} downloads on ${activity.timestamp.toLocaleDateString()}\n`;
   });
 
   return content;
@@ -163,14 +166,14 @@ Last updated: ${new Date().toISOString()}
 - **Unique Packages**: ${report.uniquePackages}
 - **Platforms Tracked**: ${report.platforms.join(', ')}
 
-### Top Packages
-${report.topPackages.slice(0, 10).map((pkg: any, index: number) => 
-  `${index + 1}. **${pkg.name}** (${pkg.platform}) - ${pkg.downloads.toLocaleString()} downloads`
+### Platform Totals
+${Object.entries(report.platformBreakdown).map(([platform, data]: [string, any]) => 
+  `- **${platform.toUpperCase()}**: ${data.totalDownloads.toLocaleString()} downloads (${data.uniquePackages} packages)`
 ).join('\n')}
 
-### Recent Activity
-${report.recentActivity.slice(0, 5).map((activity: any) => 
-  `- **${activity.packageName}** (${activity.platform}) - ${activity.downloads.toLocaleString()} downloads on ${activity.timestamp.toLocaleDateString()}`
+### Top Packages
+${report.topPackages.map((pkg: any, index: number) => 
+  `${index + 1}. **${pkg.name}** (${pkg.platform}) - ${pkg.downloads.toLocaleString()} downloads`
 ).join('\n')}
 `;
 

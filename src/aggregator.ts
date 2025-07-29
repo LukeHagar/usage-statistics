@@ -17,7 +17,6 @@ export interface AggregatedStats {
   totalDownloads: number;
   uniquePackages: number;
   platforms: string[];
-  timeRange: { start: Date; end: Date } | null;
   platformBreakdown: Record<string, {
     totalDownloads: number;
     uniquePackages: number;
@@ -27,12 +26,6 @@ export interface AggregatedStats {
     name: string;
     platform: string;
     downloads: number;
-  }>;
-  recentActivity: Array<{
-    packageName: string;
-    platform: string;
-    downloads: number;
-    timestamp: Date;
   }>;
 }
 
@@ -64,17 +57,10 @@ export class DownloadStatsAggregator implements DownloadStatsAggregator {
     }> = {};
 
     const packageMap = new Map<string, { downloads: number; platform: string }>();
-    const recentActivity: Array<{
-      packageName: string;
-      platform: string;
-      downloads: number;
-      timestamp: Date;
-    }> = [];
 
     let totalDownloads = 0;
     let uniquePackages = 0;
     const platforms = new Set<string>();
-    const timeRange = { start: new Date(), end: new Date(0) };
 
     // Process each stat
     for (const stat of stats) {
@@ -104,26 +90,7 @@ export class DownloadStatsAggregator implements DownloadStatsAggregator {
         platformBreakdown[stat.platform].packages.push(stat.packageName);
         platformBreakdown[stat.platform].uniquePackages++;
       }
-
-      // Track recent activity
-      recentActivity.push({
-        packageName: stat.packageName,
-        platform: stat.platform,
-        downloads: stat.downloadCount,
-        timestamp: stat.timestamp
-      });
-
-      // Update time range
-      if (stat.timestamp < timeRange.start) {
-        timeRange.start = stat.timestamp;
-      }
-      if (stat.timestamp > timeRange.end) {
-        timeRange.end = stat.timestamp;
-      }
     }
-
-    // Sort recent activity by timestamp
-    recentActivity.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
     // Get top packages
     const topPackages = Array.from(packageMap.entries())
@@ -132,17 +99,14 @@ export class DownloadStatsAggregator implements DownloadStatsAggregator {
         platform: data.platform,
         downloads: data.downloads
       }))
-      .sort((a, b) => b.downloads - a.downloads)
-      .slice(0, 10);
+      .sort((a, b) => b.downloads - a.downloads);
 
     return {
       totalDownloads,
       uniquePackages,
       platforms: Array.from(platforms),
-      timeRange: timeRange.start < timeRange.end ? timeRange : null,
       platformBreakdown,
-      topPackages,
-      recentActivity: recentActivity.slice(0, 20)
+      topPackages
     };
   }
 

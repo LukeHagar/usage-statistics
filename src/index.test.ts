@@ -1,12 +1,22 @@
 import { describe, it, expect, beforeEach } from "bun:test";
 import { UsageStatisticsManager } from "./index";
-import { getConfig } from "./config";
+import type { TrackingConfig } from "./types";
 
 describe("UsageStatisticsManager", () => {
   let manager: UsageStatisticsManager;
 
   beforeEach(() => {
-    const config = getConfig('test');
+    const config: TrackingConfig = {
+      enableLogging: true,
+      updateInterval: 60 * 60 * 1000,
+      npmPackages: ['lodash', 'axios'],
+      githubRepos: ['microsoft/vscode', 'facebook/react'],
+      pythonPackages: ['requests', 'numpy'],
+      homebrewPackages: ['git', 'node'],
+      powershellModules: ['PowerShellGet'],
+      postmanCollections: [],
+      goModules: ['github.com/gin-gonic/gin', 'github.com/go-chi/chi']
+    };
     manager = new UsageStatisticsManager(config);
   });
 
@@ -19,7 +29,7 @@ describe("UsageStatisticsManager", () => {
       expect(report.uniquePackages).toBeGreaterThanOrEqual(0);
       expect(Array.isArray(report.platforms)).toBe(true);
       expect(Array.isArray(report.topPackages)).toBe(true);
-      expect(Array.isArray(report.recentActivity)).toBe(true);
+      expect(report.topPackages.length).toBeGreaterThan(0);
       expect(typeof report.platformBreakdown).toBe('object');
     }, 30000); // 30 second timeout
   });
@@ -72,27 +82,23 @@ describe("UsageStatisticsManager", () => {
 });
 
 describe("Configuration", () => {
-  it("should load development config", () => {
-    const config = getConfig('development');
-    
-    expect(config).toBeDefined();
-    expect(config.enableLogging).toBe(true);
-    expect(config.updateInterval).toBe(5 * 60 * 1000); // 5 minutes
-  });
-
-  it("should load production config", () => {
-    const config = getConfig('production');
-    
-    expect(config).toBeDefined();
-    expect(config.enableLogging).toBe(false);
-    expect(config.updateInterval).toBe(60 * 60 * 1000); // 1 hour
-  });
-
-  it("should load default config", () => {
-    const config = getConfig('default');
+  it("should create valid config", () => {
+    const config: TrackingConfig = {
+      enableLogging: true,
+      updateInterval: 60 * 60 * 1000,
+      npmPackages: ['lodash', 'axios'],
+      githubRepos: ['microsoft/vscode'],
+      pythonPackages: ['requests'],
+      homebrewPackages: ['git'],
+      powershellModules: ['PowerShellGet'],
+      postmanCollections: [],
+      goModules: ['github.com/gin-gonic/gin']
+    };
     
     expect(config).toBeDefined();
     expect(config.enableLogging).toBe(true);
     expect(config.updateInterval).toBe(60 * 60 * 1000); // 1 hour
+    expect(config.npmPackages).toContain('lodash');
+    expect(config.githubRepos).toContain('microsoft/vscode');
   });
 }); 

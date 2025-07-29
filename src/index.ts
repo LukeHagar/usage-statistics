@@ -2,7 +2,6 @@
 import type { TrackingConfig } from './types';
 import { DownloadStatsAggregator } from './aggregator';
 import type { AggregatedStats } from './aggregator';
-import { getConfig, validateConfig } from './config';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { execSync } from 'node:child_process';
@@ -45,13 +44,8 @@ Last updated: ${new Date().toISOString()}
 - **Platforms Tracked**: ${stats.platforms.join(', ')}
 
 ### Top Packages
-${stats.topPackages.slice(0, 10).map((pkg, index) => 
+${stats.topPackages.map((pkg, index) => 
   `${index + 1}. **${pkg.name}** (${pkg.platform}) - ${pkg.downloads.toLocaleString()} downloads`
-).join('\n')}
-
-### Recent Activity
-${stats.recentActivity.slice(0, 5).map(activity => 
-  `- **${activity.packageName}** (${activity.platform}) - ${activity.downloads.toLocaleString()} downloads on ${activity.timestamp.toLocaleDateString()}`
 ).join('\n')}
 `;
 
@@ -79,8 +73,6 @@ async function gitCommitAndPush(files: string[], message: string) {
   execSync(`git commit -m "${message}" || echo 'No changes to commit.'`);
   execSync(`git push`);
 }
-
-const trackingConfig: TrackingConfig = getConfig(process.env.NODE_ENV as 'development' | 'production' || 'default');
 
 class UsageStatisticsManager {
   private aggregator: DownloadStatsAggregator;
@@ -110,9 +102,9 @@ class UsageStatisticsManager {
     const report = await this.generateComprehensiveReport();
     
     if (format === 'csv') {
-      const csvHeader = 'Platform,Package,Downloads,Last Updated\n';
+      const csvHeader = 'Platform,Package,Downloads\n';
       const csvRows = report.topPackages.map(pkg => 
-        `${pkg.platform},${pkg.name},${pkg.downloads},${new Date().toISOString()}`
+        `${pkg.platform},${pkg.name},${pkg.downloads}`
       ).join('\n');
       return csvHeader + csvRows;
     }
@@ -125,35 +117,26 @@ class UsageStatisticsManager {
   }
 
   async displayReport(report: AggregatedStats) {
-    console.log('🚀 Usage Statistics Report');
+    console.log('📊 Usage Statistics Summary');
     console.log('==================================================\n');
     
-    console.log('📈 Summary:');
+    // Overall Summary
+    console.log('📈 Overall Summary:');
     console.log(`Total Downloads: ${report.totalDownloads.toLocaleString()}`);
     console.log(`Unique Packages: ${report.uniquePackages}`);
-    console.log(`Platforms Tracked: ${report.platforms.join(', ')}`);
-    if (report.timeRange) {
-      console.log(`Time Range: ${report.timeRange.start.toLocaleDateString()} to ${report.timeRange.end.toLocaleDateString()}\n`);
-    }
+    console.log(`Platforms Tracked: ${report.platforms.join(', ')}\n`);
     
-    console.log('🏗️  Platform Breakdown:');
+    // Platform Totals
+    console.log('🏗️  Platform Totals:');
     for (const [platform, data] of Object.entries(report.platformBreakdown)) {
-      console.log(`  ${platform.toUpperCase()}:`);
-      console.log(`    Downloads: ${data.totalDownloads.toLocaleString()}`);
-      console.log(`    Packages: ${data.uniquePackages}`);
-      console.log(`    Package List: ${data.packages.join(', ')}`);
+      console.log(`  ${platform.toUpperCase()}: ${data.totalDownloads.toLocaleString()} downloads (${data.uniquePackages} packages)`);
     }
-    console.log();
+    console.log('');
     
-    console.log('🏆 Top Packages:');
-    report.topPackages.slice(0, 10).forEach((pkg, index) => {
+    // Package Rankings
+    console.log('🏆 Package Rankings:');
+    report.topPackages.forEach((pkg, index) => {
       console.log(`  ${index + 1}. ${pkg.name} (${pkg.platform}) - ${pkg.downloads.toLocaleString()} downloads`);
-    });
-    console.log();
-    
-    console.log('🕒 Recent Activity:');
-    report.recentActivity.slice(0, 5).forEach(activity => {
-      console.log(`  ${activity.packageName} (${activity.platform}) - ${activity.downloads.toLocaleString()} downloads on ${activity.timestamp.toLocaleDateString()}`);
     });
     console.log('==================================================');
   }
@@ -167,41 +150,49 @@ class UsageStatisticsManager {
         platform: 'npm',
         packageName: 'lodash',
         downloadCount: 1500000,
-        timestamp: new Date(),
-        period: 'total' as const,
         metadata: { version: '4.17.21' }
       },
       {
         platform: 'npm', 
         packageName: 'axios',
         downloadCount: 800000,
-        timestamp: new Date(),
-        period: 'total' as const,
         metadata: { version: '1.6.0' }
       },
       {
         platform: 'github',
         packageName: 'microsoft/vscode',
         downloadCount: 500000,
-        timestamp: new Date(),
-        period: 'total' as const,
         metadata: { release: 'v1.85.0' }
       },
       {
         platform: 'pypi',
         packageName: 'requests',
         downloadCount: 300000,
-        timestamp: new Date(),
-        period: 'total' as const,
         metadata: { version: '2.31.0' }
       },
       {
         platform: 'homebrew',
         packageName: 'git',
         downloadCount: 250000,
-        timestamp: new Date(),
-        period: 'total' as const,
         metadata: { version: '2.43.0' }
+      },
+      {
+        platform: 'powershell',
+        packageName: 'PowerShellGet',
+        downloadCount: 120000,
+        metadata: { version: '2.2.5' }
+      },
+      {
+        platform: 'postman',
+        packageName: 'Postman Collection',
+        downloadCount: 75000,
+        metadata: { collectionId: '12345' }
+      },
+      {
+        platform: 'go',
+        packageName: 'github.com/gin-gonic/gin',
+        downloadCount: 45000,
+        metadata: { version: 'v1.9.1' }
       }
     ];
 
@@ -214,15 +205,20 @@ class UsageStatisticsManager {
 async function main() {
   console.log('🚀 Usage Statistics Tracker Starting...\n');
   
-  // Validate configuration
-  try {
-    validateConfig(trackingConfig);
-  } catch (error) {
-    console.error('❌ Configuration validation failed:', error);
-    process.exit(1);
-  }
+  // Create a default configuration for CLI usage
+  const defaultConfig: TrackingConfig = {
+    enableLogging: true,
+    updateInterval: 60 * 60 * 1000, // 1 hour
+    npmPackages: ['lodash', 'axios'],
+    githubRepos: ['microsoft/vscode', 'facebook/react'],
+    pythonPackages: ['requests', 'numpy'],
+    homebrewPackages: ['git', 'node'],
+    powershellModules: ['PowerShellGet'],
+    postmanCollections: [],
+    goModules: ['github.com/gin-gonic/gin', 'github.com/go-chi/chi']
+  };
 
-  const manager = new UsageStatisticsManager(trackingConfig);
+  const manager = new UsageStatisticsManager(defaultConfig);
   
   try {
     // Check for preview mode
@@ -263,4 +259,4 @@ if (import.meta.main) {
   main();
 }
 
-export { UsageStatisticsManager, trackingConfig }; 
+export { UsageStatisticsManager }; 

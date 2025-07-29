@@ -3,11 +3,47 @@ description: 'Track download statistics across multiple platforms (NPM, GitHub, 
 author: 'LukeHagar'
 
 inputs:
-  # Configuration
-  config:
-    description: 'Configuration for tracking (development, production, test, or custom JSON)'
+  # NPM Configuration
+  npm-packages:
+    description: 'Comma-separated list of NPM packages to track'
     required: false
-    default: 'production'
+    default: ''
+  
+  # GitHub Configuration
+  github-repositories:
+    description: 'Comma-separated list of GitHub repositories (format: owner/repo)'
+    required: false
+    default: ''
+  
+  # PyPI Configuration
+  pypi-packages:
+    description: 'Comma-separated list of PyPI packages to track'
+    required: false
+    default: ''
+  
+  # Homebrew Configuration
+  homebrew-formulas:
+    description: 'Comma-separated list of Homebrew formulas to track'
+    required: false
+    default: ''
+  
+  # PowerShell Configuration
+  powershell-modules:
+    description: 'Comma-separated list of PowerShell modules to track'
+    required: false
+    default: ''
+  
+  # Postman Configuration
+  postman-collections:
+    description: 'Comma-separated list of Postman collection IDs to track'
+    required: false
+    default: ''
+  
+  # Go Configuration
+  go-modules:
+    description: 'Comma-separated list of Go modules to track'
+    required: false
+    default: ''
   
   # Output paths
   json-output-path:
@@ -80,4 +116,4 @@ outputs:
 
 runs:
   using: 'node20'
-  main: 'dist/index.js' 
+  main: 'dist/action.js' 

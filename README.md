@@ -20,7 +20,13 @@ A comprehensive GitHub Action for tracking download statistics across multiple p
 - name: Usage Statistics Tracker
   uses: LukeHagar/usage-statistics@v1
   with:
-    config: 'production'
+    npm-packages: 'lodash,axios'
+    github-repositories: 'microsoft/vscode,facebook/react'
+    pypi-packages: 'requests,numpy'
+    homebrew-formulas: 'git,node'
+    powershell-modules: 'PowerShellGet,PSReadLine'
+    postman-collections: '12345,67890'
+    go-modules: 'github.com/gin-gonic/gin,github.com/go-chi/chi'
     json-output-path: 'stats.json'
     csv-output-path: 'stats.csv'
     report-output-path: 'report.md'
@@ -50,7 +56,13 @@ bun test
 
 | Parameter | Description | Required | Default |
 |-----------|-------------|----------|---------|
-| `config` | Configuration mode or JSON | No | `production` |
+| `npm-packages` | Comma-separated list of NPM packages | No | (empty) |
+| `github-repositories` | Comma-separated list of GitHub repos (owner/repo) | No | (empty) |
+| `pypi-packages` | Comma-separated list of PyPI packages | No | (empty) |
+| `homebrew-formulas` | Comma-separated list of Homebrew formulas | No | (empty) |
+| `powershell-modules` | Comma-separated list of PowerShell modules | No | (empty) |
+| `postman-collections` | Comma-separated list of Postman collection IDs | No | (empty) |
+| `go-modules` | Comma-separated list of Go modules | No | (empty) |
 | `json-output-path` | Path for JSON output | No | `stats.json` |
 | `csv-output-path` | Path for CSV output | No | (empty) |
 | `report-output-path` | Path for human-readable report | No | (empty) |
@@ -61,30 +73,36 @@ bun test
 | `commit-message` | Commit message for changes | No | `chore: update usage statistics [skip ci]` |
 | `preview-mode` | Run with mock data | No | `false` |
 
-### Configuration Modes
+### Configuration Examples
 
-#### Production Mode
+#### NPM Packages Only
 ```yaml
 - name: Usage Statistics Tracker
   uses: LukeHagar/usage-statistics@v1
   with:
-    config: 'production'
+    npm-packages: 'lodash,axios,react'
 ```
 
-#### Development Mode
+#### GitHub Repositories Only
 ```yaml
 - name: Usage Statistics Tracker
   uses: LukeHagar/usage-statistics@v1
   with:
-    config: 'development'
+    github-repositories: 'microsoft/vscode,facebook/react,vercel/next.js'
 ```
 
-#### Custom JSON Configuration
+#### Mixed Platform Configuration
 ```yaml
 - name: Usage Statistics Tracker
   uses: LukeHagar/usage-statistics@v1
   with:
-    config: '{"npmPackages": ["lodash", "axios"], "githubRepositories": ["microsoft/vscode"]}'
+    npm-packages: 'lodash,axios'
+    github-repositories: 'microsoft/vscode,facebook/react'
+    pypi-packages: 'requests,numpy'
+    homebrew-formulas: 'git,node'
+    powershell-modules: 'PowerShellGet,PSReadLine'
+    postman-collections: '12345,67890'
+    go-modules: 'github.com/gin-gonic/gin,github.com/go-chi/chi'
 ```
 
 ### Outputs
@@ -121,7 +139,13 @@ jobs:
     - name: Usage Statistics Tracker
       uses: LukeHagar/usage-statistics@v1
       with:
-        config: 'production'
+        npm-packages: 'lodash,axios'
+        github-repositories: 'microsoft/vscode,facebook/react'
+        pypi-packages: 'requests,numpy'
+        homebrew-formulas: 'git,node'
+        powershell-modules: 'PowerShellGet,PSReadLine'
+        postman-collections: '12345,67890'
+        go-modules: 'github.com/gin-gonic/gin,github.com/go-chi/chi'
         json-output-path: 'stats.json'
         update-readme: 'true'
         github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -141,7 +165,13 @@ jobs:
 - name: Usage Statistics Tracker
   uses: LukeHagar/usage-statistics@v1
   with:
-    config: 'production'
+    npm-packages: 'lodash,axios,react'
+    github-repositories: 'microsoft/vscode,facebook/react'
+    pypi-packages: 'requests,numpy'
+    homebrew-formulas: 'git,node'
+    powershell-modules: 'PowerShellGet,PSReadLine'
+    postman-collections: '12345,67890'
+    go-modules: 'github.com/gin-gonic/gin,github.com/go-chi/chi'
     json-output-path: 'data/stats.json'
     csv-output-path: 'data/stats.csv'
     report-output-path: 'docs/usage-report.md'
@@ -172,7 +202,11 @@ jobs:
   id: stats
   uses: LukeHagar/usage-statistics@v1
   with:
-    config: 'production'
+    npm-packages: 'lodash,axios'
+    github-repositories: 'microsoft/vscode,facebook/react'
+    powershell-modules: 'PowerShellGet'
+    postman-collections: '12345'
+    go-modules: 'github.com/gin-gonic/gin'
     json-output-path: 'stats.json'
 
 - name: Use Statistics Data
@@ -198,19 +232,17 @@ Last updated: 2025-07-29T18:53:52.619Z
 - **Unique Packages**: 8
 - **Platforms Tracked**: npm, pypi, homebrew, go
 
+### Platform Totals
+- **HOMEBREW**: 380,163 downloads (2 packages)
+- **NPM**: 34,311 downloads (2 packages)
+- **GO**: 33 downloads (2 packages)
+
 ### Top Packages
 1. **node** (homebrew) - 226,882 downloads
 2. **git** (homebrew) - 153,281 downloads
 3. **axios** (npm) - 18,397 downloads
 4. **lodash** (npm) - 15,914 downloads
 5. **github.com/go-chi/chi** (go) - 33 downloads
-
-### Recent Activity
-- **node** (homebrew) - 226,882 downloads on 7/29/2025
-- **git** (homebrew) - 153,281 downloads on 7/29/2025
-- **axios** (npm) - 722 downloads on 7/29/2025
-- **lodash** (npm) - 857 downloads on 7/29/2025
-- **axios** (npm) - 936 downloads on 7/28/2025
 <!-- USAGE_STATS_END -->
 ```
 
@@ -246,7 +278,6 @@ usage-statistics/
 ├── src/
 │   ├── index.ts          # Main library entry point
 │   ├── action.ts         # GitHub Action entry point
-│   ├── config.ts         # Configuration management
 │   ├── aggregator.ts     # Statistics aggregation
 │   ├── types/            # TypeScript type definitions
 │   ├── trackers/         # Platform-specific trackers
