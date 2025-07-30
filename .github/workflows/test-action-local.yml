@@ -38,6 +38,7 @@ jobs:
         csv-output-path: 'local-stats.csv'
         report-output-path: 'local-report.md'
         update-readme: 'false'
+        github-token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Test local action with real data
       id: test-real-local
@@ -52,6 +53,7 @@ jobs:
         csv-output-path: 'local-real-stats.csv'
         report-output-path: 'local-real-report.md'
         update-readme: 'false'
+        github-token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Check local preview mode outputs
       run: |
