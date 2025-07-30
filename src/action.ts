@@ -29,7 +29,14 @@ async function run() {
     // Set environment variables
     if (githubToken) {
       process.env.GITHUB_TOKEN = githubToken;
+      core.info('✅ Using custom GitHub token for authentication');
+    } else if (process.env.GITHUB_TOKEN) {
+      // Use the default GitHub token if no custom token provided
+      core.info('✅ Using default GitHub token from environment');
+    } else {
+      core.warning('⚠️ No GitHub token provided. Some API calls may be rate limited.');
     }
+    
     if (postmanApiKey) {
       process.env.POSTMAN_API_KEY = postmanApiKey;
     }

@@ -24,7 +24,9 @@
   },
   "dependencies": {
     "@actions/core": "1.11.1",
-    "@octokit/rest": "22.0.0"
+    "@octokit/rest": "22.0.0",
+    "@octokit/plugin-retry": "^7.0.0",
+    "@octokit/plugin-throttling": "^7.0.0"
   },
   "engines": {
     "bun": ">=1.0.0"

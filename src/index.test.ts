@@ -7,15 +7,15 @@ describe("UsageStatisticsManager", () => {
 
   beforeEach(() => {
     const config: TrackingConfig = {
-      enableLogging: true,
+      enableLogging: false, // Disable logging for tests
       updateInterval: 60 * 60 * 1000,
-      npmPackages: ['lodash', 'axios'],
-      githubRepos: ['microsoft/vscode', 'facebook/react'],
-      pythonPackages: ['requests', 'numpy'],
-      homebrewPackages: ['git', 'node'],
+      npmPackages: ['lodash'], // Reduce to single package for faster tests
+      githubRepos: ['microsoft/vscode'], // Reduce to single repo
+      pythonPackages: ['requests'], // Reduce to single package
+      homebrewPackages: ['git'], // Reduce to single package
       powershellModules: ['PowerShellGet'],
       postmanCollections: [],
-      goModules: ['github.com/gin-gonic/gin', 'github.com/go-chi/chi']
+      goModules: ['github.com/go-chi/chi'] // Reduce to single module
     };
     manager = new UsageStatisticsManager(config);
   });
@@ -31,7 +31,7 @@ describe("UsageStatisticsManager", () => {
       expect(Array.isArray(report.topPackages)).toBe(true);
       expect(report.topPackages.length).toBeGreaterThan(0);
       expect(typeof report.platformBreakdown).toBe('object');
-    }, 30000); // 30 second timeout
+    }, 10000); // 10 second timeout
   });
 
   describe("getPlatformReport", () => {
@@ -54,7 +54,7 @@ describe("UsageStatisticsManager", () => {
       // Should be valid JSON
       const parsed = JSON.parse(jsonReport);
       expect(parsed).toBeDefined();
-    }, 30000); // 30 second timeout
+    }, 10000); // 10 second timeout
 
     it("should export CSV report", async () => {
       const csvReport = await manager.exportReport('csv');
@@ -62,7 +62,7 @@ describe("UsageStatisticsManager", () => {
       expect(csvReport).toBeDefined();
       expect(typeof csvReport).toBe('string');
       expect(csvReport.includes('Platform,Package,Downloads')).toBe(true);
-    }, 30000); // 30 second timeout
+    }, 10000); // 10 second timeout
   });
 
   describe("getLastUpdateTime", () => {

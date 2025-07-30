@@ -17,14 +17,6 @@ export interface PlatformTracker {
   getPackageInfo(packageName: string): Promise<any>;
 }
 
-export interface DownloadStatsAggregator {
-  aggregateStats(stats: BaseDownloadStats[]): {
-    totalDownloads: number;
-    uniquePackages: number;
-    platforms: string[];
-  };
-}
-
 export interface TrackingConfig {
   npmPackages?: string[];
   goModules?: string[];

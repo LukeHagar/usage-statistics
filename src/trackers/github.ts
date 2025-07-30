@@ -5,6 +5,8 @@
 
 import type { BaseDownloadStats, PlatformTracker } from '../types';
 import { Octokit } from '@octokit/rest';
+import { retry } from '@octokit/plugin-retry';
+import { throttling } from '@octokit/plugin-throttling';
 
 export interface GitHubDownloadStats extends BaseDownloadStats {
   platform: 'github';
@@ -57,30 +59,35 @@ export class GitHubTracker implements PlatformTracker {
   }
 
   private async initializeOctokit() {
-    if (typeof window === 'undefined') {
-      // Server-side: use Octokit
-      this.octokit = new Octokit({
-        auth: this.token,
-        userAgent: 'usage-statistics-tracker',
-        timeZone: 'UTC',
-        baseUrl: 'https://api.github.com',
-        log: {
-          debug: () => {},
-          info: () => {},
-          warn: console.warn,
-          error: console.error
+    // Create Octokit with retry and throttling plugins
+    const MyOctokit = Octokit.plugin(retry, throttling);
+    
+    this.octokit = new MyOctokit({
+      auth: this.token,
+      userAgent: 'usage-statistics-tracker',
+      timeZone: 'UTC',
+      baseUrl: 'https://api.github.com',
+      log: {
+        debug: () => {},
+        info: () => {},
+        warn: console.warn,
+        error: console.error
+      },
+      throttle: {
+        onRateLimit: (retryAfter: number, options: any) => {
+          console.warn(`Rate limit hit for ${options.request.url}, retrying after ${retryAfter} seconds`);
+          return true; // Retry after the specified time
         },
-        request: {
-          timeout: 10000,
-          retries: 3,
-          retryAfterBaseValue: 1,
-          retryAfterMaxValue: 60
+        onSecondaryRateLimit: (retryAfter: number, options: any) => {
+          console.warn(`Secondary rate limit hit for ${options.request.url}, retrying after ${retryAfter} seconds`);
+          return true; // Retry after the specified time
         }
-      });
-    } else {
-      // Client-side: use fetch API
-      this.octokit = null;
-    }
+      },
+      retry: {
+        doNotRetry: [400, 401, 403, 404, 422], // Don't retry on these status codes
+        enabled: true
+      }
+    });
   }
 
   async getDownloadStats(repository: string, options?: {
@@ -154,91 +161,41 @@ export class GitHubTracker implements PlatformTracker {
   async getPackageInfo(repository: string): Promise<GitHubRepositoryInfo> {
     const [owner, repo] = repository.split('/');
     
-    if (this.octokit) {
-      // Use Octokit if available
-      try {
-        const response = await this.octokit.repos.get({
-          owner,
-          repo
-        });
-        return response.data;
-      } catch (error: any) {
-        if (error.status === 403 && error.message.includes('abuse detection')) {
-          console.warn(`Rate limit hit for ${repository}, waiting 60 seconds...`);
-          await this.sleep(60000);
-          return this.getPackageInfo(repository); // Retry once
-        }
-        throw error;
-      }
-    } else {
-      // Fallback to fetch API
-      const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
-        headers: this.token ? {
-          'Authorization': `token ${this.token}`,
-          'Accept': 'application/vnd.github.v3+json'
-        } : {
-          'Accept': 'application/vnd.github.v3+json'
-        }
+    if (!this.octokit) {
+      throw new Error('Octokit not initialized');
+    }
+    
+    try {
+      const response = await this.octokit.repos.get({
+        owner,
+        repo
       });
-      
-      if (!response.ok) {
-        if (response.status === 403) {
-          console.warn(`Rate limit hit for ${repository}, waiting 60 seconds...`);
-          await this.sleep(60000);
-          return this.getPackageInfo(repository); // Retry once
-        }
-        throw new Error(`Failed to fetch repository info for ${repository}`);
-      }
-      
-      return response.json();
+      return response.data;
+    } catch (error: any) {
+      console.error(`Error fetching repository info for ${repository}:`, error);
+      throw error;
     }
   }
 
   private async getReleases(owner: string, repo: string): Promise<GitHubReleaseInfo[]> {
-    if (this.octokit) {
-      // Use Octokit if available
-      try {
-        const response = await this.octokit.repos.listReleases({
-          owner,
-          repo,
-          per_page: 100
-        });
-        return response.data;
-      } catch (error: any) {
-        if (error.status === 403 && error.message.includes('abuse detection')) {
-          console.warn(`Rate limit hit for ${owner}/${repo}, waiting 60 seconds...`);
-          await this.sleep(60000);
-          return this.getReleases(owner, repo); // Retry once
-        }
-        throw error;
-      }
-    } else {
-      // Fallback to fetch API
-      const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases?per_page=100`, {
-        headers: this.token ? {
-          'Authorization': `token ${this.token}`,
-          'Accept': 'application/vnd.github.v3+json'
-        } : {
-          'Accept': 'application/vnd.github.v3+json'
-        }
+    if (!this.octokit) {
+      throw new Error('Octokit not initialized');
+    }
+    
+    try {
+      const response = await this.octokit.repos.listReleases({
+        owner,
+        repo,
+        per_page: 100
       });
-      
-      if (!response.ok) {
-        if (response.status === 403) {
-          console.warn(`Rate limit hit for ${owner}/${repo}, waiting 60 seconds...`);
-          await this.sleep(60000);
-          return this.getReleases(owner, repo); // Retry once
-        }
-        throw new Error(`Failed to fetch releases for ${owner}/${repo}`);
-      }
-      
-      return response.json();
+      return response.data;
+    } catch (error: any) {
+      console.error(`Error fetching releases for ${owner}/${repo}:`, error);
+      throw error;
     }
   }
 
-  private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
+
 }
 
 export default GitHubTracker; 
