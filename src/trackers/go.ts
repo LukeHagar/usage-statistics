@@ -90,8 +90,6 @@ export class GoTracker implements PlatformTracker {
           downloadCount,
           publishedDate,
           goModHash: moduleInfo.GoMod,
-          timestamp: publishedDate,
-          period: 'total',
           metadata: {
             isMain: moduleInfo.Main,
             isRetracted: moduleInfo.Retracted,

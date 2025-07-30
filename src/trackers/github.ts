@@ -120,8 +120,6 @@ export class GitHubTracker implements PlatformTracker {
             assetName: asset.name,
             assetId: asset.id,
             downloadCount: asset.download_count,
-            timestamp: new Date(release.published_at || new Date()),
-            period: 'total',
             metadata: {
               assetSize: asset.size,
               contentType: asset.content_type,

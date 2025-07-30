@@ -84,8 +84,6 @@ export class PowerShellTracker implements PlatformTracker {
           tags: version.Tags,
           downloadCount: version.DownloadCount,
           publishedDate,
-          timestamp: publishedDate,
-          period: 'total',
           metadata: {
             isLatestVersion: version.IsLatestVersion,
             dependencies: version.Dependencies,

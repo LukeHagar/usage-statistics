@@ -89,8 +89,6 @@ export class PyPiTracker implements PlatformTracker {
             pythonVersion: file.python_version,
             uploadTime,
             downloadCount: file.download_count || 0,
-            timestamp: uploadTime,
-            period: 'total',
             metadata: {
               filename: file.filename,
               fileSize: file.size,

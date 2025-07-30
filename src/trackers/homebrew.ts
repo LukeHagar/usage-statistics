@@ -85,8 +85,6 @@ export class HomebrewTracker implements PlatformTracker {
             version: formulaInfo.version,
             installCount: totalInstalls,
             downloadCount: totalInstalls, // For compatibility with BaseDownloadStats
-            timestamp: new Date(),
-            period: 'total',
             metadata: {
               analyticsPeriod: period,
               analyticsData: analytics,
@@ -107,8 +105,6 @@ export class HomebrewTracker implements PlatformTracker {
           version: formulaInfo.version,
           installCount: formulaInfo.installed.length,
           downloadCount: formulaInfo.installed.length,
-          timestamp: new Date(),
-          period: 'total',
           metadata: {
             installedVersions: formulaInfo.installed,
             dependencies: formulaInfo.dependencies,

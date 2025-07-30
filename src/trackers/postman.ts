@@ -98,8 +98,6 @@ export class PostmanTracker implements PlatformTracker {
           viewCount: version.viewCount || 0,
           author: version.author?.name || 'Unknown',
           publishedDate,
-          timestamp: publishedDate,
-          period: 'total',
           metadata: {
             authorId: version.author?.id,
             authorUsername: version.author?.username,

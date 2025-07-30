@@ -94,8 +94,6 @@ export class NpmTracker implements PlatformTracker {
         platform: 'npm',
         packageName,
         downloadCount: Math.floor(Math.random() * 1000) + 100, // Simulated data
-        timestamp: date,
-        period: 'daily',
         registry: this.baseUrl,
         metadata: {
           source: 'npm-registry',
