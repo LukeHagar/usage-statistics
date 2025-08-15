@@ -1,7 +1,7 @@
 <!-- METRICS_START -->
 # Usage Statistics
     
-Last updated: 8/14/2025, 9:38:02 PM
+Last updated: 8/14/2025, 9:46:15 PM
 
 Below are stats from artifacts tracked across NPM, GitHub, PyPI and PowerShell.
     
@@ -19,27 +19,24 @@ Below are stats from artifacts tracked across NPM, GitHub, PyPI and PowerShell.
 
 | Repository | Stars | Forks | Watchers | Open Issues | Closed Issues | Total Issues | Release Downloads | Releases | Latest Release | Language |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| sailpoint-oss/sailpoint-cli | 35 | 24 | 9 | 5 | 35 | 40 | 10,013 | 31 | 2.2.5 | Go |
-| **Total** | **35** | **24** | **9** | **5** | **35** | **40** | **10,013** | **31** | | |
+| sailpoint-oss/sailpoint-cli | 35 | 24 | 35 | 0 | 0 | 0 | 0 | 0 | N/A | Go |
+| **Total** | **35** | **24** | **35** | **0** | **0** | **0** | **0** | **0** | | |
 
 #### Repository Details:
 
 **sailpoint-oss/sailpoint-cli**:
-- Last Activity: 34 days ago
-- Repository Age: 1,120 days
-- Release Count: 31
-- Total Release Downloads: 10,013
-- Latest Release: 2.2.5
-- Latest Release Downloads: 746
-- Views: 484
-- Unique Visitors: 160
-- Clones: 18
+- Last Activity: 0 days ago
+- Repository Age: 0 days
+- Release Count: 0
+- Total Release Downloads: 0
+- Latest Release: N/A
+- Latest Release Downloads: 0
+- Views: 0
+- Unique Visitors: 0
+- Clones: 0
 
 
 
-![./charts/github/sailpoint-oss-sailpoint-cli-release-downloads.svg](./charts/github/sailpoint-oss-sailpoint-cli-release-downloads.svg)
-![./charts/github/sailpoint-oss-sailpoint-cli-cumulative-release-downloads.svg](./charts/github/sailpoint-oss-sailpoint-cli-cumulative-release-downloads.svg)
-![./charts/github/sailpoint-oss-sailpoint-cli-top-release-downloads.svg](./charts/github/sailpoint-oss-sailpoint-cli-top-release-downloads.svg)
 
 ### PyPI (Python): 
 

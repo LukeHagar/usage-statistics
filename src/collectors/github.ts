@@ -4,7 +4,7 @@
 
 import { Octokit } from '@octokit/rest';
 import { graphql } from '@octokit/graphql';
-import type { MetricResult } from './types';
+import type { MetricResult } from './types.js';
 
 const PlatformSettings = {
   name: 'GitHub',

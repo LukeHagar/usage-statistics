@@ -2,7 +2,7 @@
  * NPM package statistics collector with enhanced metrics
  */
 
-import type { MetricResult } from './types';
+import type { MetricResult } from './types.js';
 
 const PlatformSettings = {
   name: 'NPM',

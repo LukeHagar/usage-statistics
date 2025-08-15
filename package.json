@@ -1,6 +1,7 @@
 {
   "name": "usage-statistics",
   "version": "1.0.0",
+  "type": "module",
   "description": "A comprehensive GitHub Action for tracking download statistics across multiple platforms",
   "repository": {
     "type": "git",
@@ -15,6 +16,7 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@types/node": "^20.0.0",
+    "@types/semver": "7.7.0",
     "bun-types": "1.2.19",
     "typescript": "^5.0.0"
   },
@@ -30,6 +32,7 @@
     "chartjs-adapter-moment": "1.0.1",
     "fast-xml-parser": "5.2.5",
     "moment": "2.30.1",
+    "semver": "^7.5.0",
     "skia-canvas": "^2.0.2"
   },
   "engines": {

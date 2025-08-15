@@ -3,11 +3,11 @@ import { CategoryScale, Chart, LinearScale, LineController, LineElement, PointEl
 import { readFile, writeFile } from 'fs/promises';
 import { writeFileSync } from 'node:fs';
 import { Canvas } from 'skia-canvas';
-import type { MetricResult } from "./collectors/types";
-import { addRepoDetails, formatGitHubSummary } from './summaries/github';
-import { addNpmDetails, formatNpmSummary } from './summaries/npm';
-import { formatPowerShellSummary, addPowerShellDetails } from './summaries/powershell';
-import { addPypiDetails, addPypiCharts, formatPypiSummary } from './summaries/pypi';
+import type { MetricResult } from "./collectors/types.js";
+import { addRepoDetails, formatGitHubSummary } from './summaries/github.js';
+import { addNpmDetails, formatNpmSummary } from './summaries/npm.js';
+import { formatPowerShellSummary, addPowerShellDetails } from './summaries/powershell.js';
+import { addPypiDetails, addPypiCharts, formatPypiSummary } from './summaries/pypi.js';
 
 Chart.register([
     CategoryScale,

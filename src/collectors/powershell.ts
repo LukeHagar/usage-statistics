@@ -2,7 +2,7 @@
  * PowerShell Gallery module statistics collector with enhanced metrics
  */
 
-import type { MetricResult } from './types';
+import type { MetricResult } from './types.js';
 import { XMLParser } from 'fast-xml-parser';
 
 const PlatformSettings = {

@@ -1,5 +1,5 @@
 import { mkdirSync, writeFileSync } from "fs"
-import type { MetricResult } from "../collectors/types"
+import type { MetricResult } from "../collectors/types.js"
 import { Chart, registerables } from 'chart.js';
 import { Canvas } from 'skia-canvas';
 

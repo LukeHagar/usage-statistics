@@ -2,7 +2,7 @@
  * PyPI package statistics collector using external PyPI Stats API
  */
 
-import type { MetricResult } from './types';
+import type { MetricResult } from './types.js';
 
 const PlatformSettings = {
   name: 'PyPI',

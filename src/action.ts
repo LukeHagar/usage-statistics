@@ -1,10 +1,10 @@
 import * as core from '@actions/core'
-import { collectNpmBatch } from './collectors/npm'
-import { collectGithubBatch } from './collectors/github'
-import { collectPowerShellBatch } from './collectors/powershell'
-import { collectPypiBatch } from './collectors/pypi'
-import type { MetricResult } from './collectors/types'
-import { getInputs, updateRepositoryReadme } from './utils'
+import { collectNpmBatch } from './collectors/npm.js'
+import { collectGithubBatch } from './collectors/github.js'
+import { collectPowerShellBatch } from './collectors/powershell.js'
+import { collectPypiBatch } from './collectors/pypi.js'
+import type { MetricResult } from './collectors/types.js'
+import { getInputs, updateRepositoryReadme } from './utils.js'
 import { writeFile } from 'fs/promises'
 
 try {
