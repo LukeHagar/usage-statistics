@@ -73,7 +73,7 @@ jobs:
         json-output-path: 'stats.json'
         update-readme: 'true'
         readme-path: 'Test-Readme.md'
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+        github-token: ${{ secrets.PAT_TOKEN }}
 
     - name: Check generated outputs
       run: |
