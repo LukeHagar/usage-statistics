@@ -3,6 +3,7 @@
  */
 import { Octokit } from '@octokit/rest';
 import { graphql } from '@octokit/graphql';
+import * as core from '@actions/core';
 const PlatformSettings = {
     name: 'GitHub',
 };
@@ -82,7 +83,7 @@ export async function collectGithub(repository) {
             throw new Error(`Invalid repository format: ${repository}. Expected "owner/repo"`);
         }
         // Initialize Octokit for REST API calls
-        const token = process.env.GITHUB_TOKEN || process.env.INPUT_GITHUB_TOKEN || '';
+        const token = core.getInput('github-token');
         const octokit = new Octokit({
             auth: token,
             userAgent: 'usage-statistics-tracker'

@@ -46486,10 +46486,13 @@ const dist_src_Octokit = Octokit.plugin(requestLog, legacyRestEndpointMethods, p
 
 // EXTERNAL MODULE: ./node_modules/@octokit/graphql/dist-node/index.js
 var dist_node = __nccwpck_require__(7);
+// EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
+var core = __nccwpck_require__(7484);
 ;// CONCATENATED MODULE: ./dist/collectors/github.js
 /**
  * GitHub repository statistics collector with enhanced metrics using Octokit SDK and GraphQL
  */
+
 
 
 const PlatformSettings = {
@@ -46571,7 +46574,7 @@ async function collectGithub(repository) {
             throw new Error(`Invalid repository format: ${repository}. Expected "owner/repo"`);
         }
         // Initialize Octokit for REST API calls
-        const token = process.env.GITHUB_TOKEN || process.env.INPUT_GITHUB_TOKEN || '';
+        const token = core.getInput('github-token');
         const octokit = new dist_src_Octokit({
             auth: token,
             userAgent: 'usage-statistics-tracker'
