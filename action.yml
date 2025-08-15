@@ -1,5 +1,5 @@
 name: 'Usage Statistics Tracker'
-description: 'Track download statistics across multiple platforms (NPM, GitHub, PyPI, Homebrew, PowerShell, Postman, Go)'
+description: 'Track download statistics across multiple platforms (NPM, GitHub, PyPI, PowerShell)'
 author: 'LukeHagar'
 
 inputs:
@@ -21,45 +21,23 @@ inputs:
     required: false
     default: ''
   
-  # Homebrew Configuration
-  homebrew-formulas:
-    description: 'Comma-separated list of Homebrew formulas to track'
-    required: false
-    default: ''
-  
   # PowerShell Configuration
   powershell-modules:
     description: 'Comma-separated list of PowerShell modules to track'
     required: false
     default: ''
   
-  # Postman Configuration
-  postman-collections:
-    description: 'Comma-separated list of Postman collection IDs to track'
-    required: false
-    default: ''
-  
-  # Go Configuration
-  go-modules:
-    description: 'Comma-separated list of Go modules to track'
-    required: false
-    default: ''
+  # Go tracking removed
   
   # Output paths
   json-output-path:
     description: 'Path for JSON output file'
     required: false
-    default: 'stats.json'
-  
-  csv-output-path:
-    description: 'Path for CSV output file'
+    default: 'stats.json'  
+  readme-path:
+    description: 'Path to README file to update'
     required: false
-    default: ''
-  
-  report-output-path:
-    description: 'Path for human-readable report file'
-    required: false
-    default: ''
+    default: 'README.md'
   
   # README update
   update-readme:
@@ -67,49 +45,21 @@ inputs:
     required: false
     default: 'true'
   
-  readme-path:
-    description: 'Path to README file to update'
-    required: false
-    default: 'README.md'
-  
   # GitHub integration
   github-token:
     description: 'GitHub token for API access and commits'
     required: false
     default: '${{ github.token }}'
   
-  # Postman integration
-  postman-api-key:
-    description: 'Postman API key for collection statistics'
-    required: false
-  
   # Commit settings
   commit-message:
     description: 'Commit message for changes'
     required: false
-    default: 'chore: update usage statistics [skip ci]'
-  
-  # Preview mode
-  preview-mode:
-    description: 'Run in preview mode with mock data (no external API calls)'
-    required: false
-    default: 'false'
+    default: 'chore: update usage statistics'
 
 outputs:
   json-output:
     description: 'Path to the generated JSON file'
-  
-  csv-output:
-    description: 'Path to the generated CSV file'
-  
-  report-output:
-    description: 'Path to the generated report file'
-  
-  total-downloads:
-    description: 'Total downloads across all platforms'
-  
-  unique-packages:
-    description: 'Number of unique packages tracked'
   
   platforms-tracked:
     description: 'Comma-separated list of platforms tracked'

@@ -1,206 +1,112 @@
-#!/usr/bin/env bun
-import * as core from '@actions/core';
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import { UsageStatisticsManager } from './index';
-import type { TrackingConfig } from './types';
+import * as core from '@actions/core'
+import { collectNpmBatch } from './collectors/npm'
+import { collectGithubBatch } from './collectors/github'
+import { collectPowerShellBatch } from './collectors/powershell'
+import { collectPypiBatch } from './collectors/pypi'
+import type { MetricResult } from './collectors/types'
+import { getInputs, updateRepositoryReadme } from './utils'
+import { writeFile } from 'fs/promises'
 
-async function run() {
-  try {
-    // Get inputs
-    const npmPackages = core.getInput('npm-packages');
-    const githubRepositories = core.getInput('github-repositories');
-    const pypiPackages = core.getInput('pypi-packages');
-    const homebrewFormulas = core.getInput('homebrew-formulas');
-    const powershellModules = core.getInput('powershell-modules');
-    const postmanCollections = core.getInput('postman-collections');
-    const goModules = core.getInput('go-modules');
-    
-    const jsonOutputPath = core.getInput('json-output-path');
-    const csvOutputPath = core.getInput('csv-output-path');
-    const reportOutputPath = core.getInput('report-output-path');
-    const updateReadme = core.getInput('update-readme') === 'true';
-    const readmePath = core.getInput('readme-path');
-    const githubToken = core.getInput('github-token');
-    const postmanApiKey = core.getInput('postman-api-key');
-    const commitMessage = core.getInput('commit-message');
-    const previewMode = core.getInput('preview-mode') === 'true';
+try {
+    const {
+        npmPackages,
+        githubRepositories,
+        pypiPackages,
+        powershellModules,
+        jsonOutputPath,
+        updateReadme,
+        commitMessage,
+        readmePath,
+    } = getInputs()
 
-    // Set environment variables
-    if (githubToken) {
-      process.env.GITHUB_TOKEN = githubToken;
-      core.info('✅ Using custom GitHub token for authentication');
-    } else if (process.env.GITHUB_TOKEN) {
-      // Use the default GitHub token if no custom token provided
-      core.info('✅ Using default GitHub token from environment');
-    } else {
-      core.warning('⚠️ No GitHub token provided. Some API calls may be rate limited.');
-    }
-    
-    if (postmanApiKey) {
-      process.env.POSTMAN_API_KEY = postmanApiKey;
-    }
+    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
+    core.debug(`NPM Packages: ${npmPackages.join(', ')}`)
+    core.debug(`GitHub Repositories: ${githubRepositories.join(', ')}`)
+    core.debug(`PyPI Packages: ${pypiPackages.join(', ')}`)
+    core.debug(`PowerShell Modules: ${powershellModules.join(', ')}`)
+    core.debug(``)
+    core.debug(`JSON Output Path: ${jsonOutputPath}`)
+    core.debug(`Update README: ${updateReadme}`)
+    core.debug(`Commit Message: ${commitMessage}`)
 
-    // Build configuration from inputs
-    const trackingConfig: TrackingConfig = {
-      enableLogging: true,
-      updateInterval: 60 * 60 * 1000, // 1 hour
-      npmPackages: npmPackages ? npmPackages.split(',').map(p => p.trim()).filter(p => p) : [],
-      githubRepos: githubRepositories ? githubRepositories.split(',').map(r => r.trim()).filter(r => r) : [],
-      pythonPackages: pypiPackages ? pypiPackages.split(',').map(p => p.trim()).filter(p => p) : [],
-      homebrewPackages: homebrewFormulas ? homebrewFormulas.split(',').map(f => f.trim()).filter(f => f) : [],
-      powershellModules: powershellModules ? powershellModules.split(',').map(m => m.trim()).filter(m => m) : [],
-      postmanCollections: postmanCollections ? postmanCollections.split(',').map(c => c.trim()).filter(c => c) : [],
-      goModules: goModules ? goModules.split(',').map(m => m.trim()).filter(m => m) : []
-    };
+    // Track which platforms are being used
+    const platformsTracked: string[] = []
+    if (npmPackages.length > 0) platformsTracked.push('NPM')
+    if (githubRepositories.length > 0) platformsTracked.push('GitHub')
+    if (pypiPackages.length > 0) platformsTracked.push('PyPI')
+    if (powershellModules.length > 0) platformsTracked.push('PowerShell')
 
-    // Validate that at least one platform has packages configured
-    const totalPackages = (trackingConfig.npmPackages?.length || 0) + 
-                         (trackingConfig.githubRepos?.length || 0) + 
-                         (trackingConfig.pythonPackages?.length || 0) + 
-                         (trackingConfig.homebrewPackages?.length || 0) + 
-                         (trackingConfig.powershellModules?.length || 0) + 
-                         (trackingConfig.postmanCollections?.length || 0) + 
-                         (trackingConfig.goModules?.length || 0);
+    core.debug(`Platforms to track: ${platformsTracked.join(', ')}`)
 
-    if (totalPackages === 0 && !previewMode) {
-      core.warning('No packages configured for tracking. Consider adding packages to track or enabling preview mode.');
-    }
+    core.info(`Successfully configured usage statistics tracker for ${platformsTracked.length} platforms`)
 
-    // Create manager
-    const manager = new UsageStatisticsManager(trackingConfig);
-    
-    // Generate report
-    let report;
-    if (previewMode) {
-      core.info('🎭 Running in preview mode with mock data...');
-      report = await manager.generatePreviewReport();
-    } else {
-      core.info('📊 Generating comprehensive usage statistics report...');
-      report = await manager.generateComprehensiveReport();
-    }
-    
-    // Display report
-    await manager.displayReport(report);
-    
-    // Write JSON output
-    if (jsonOutputPath) {
-      const jsonContent = JSON.stringify(report, null, 2);
-      await fs.writeFile(jsonOutputPath, jsonContent);
-      core.info(`📄 JSON report written to ${jsonOutputPath}`);
-      core.setOutput('json-output', jsonOutputPath);
+    const metricPromises: Promise<MetricResult[]>[] = []
+    const metrics: MetricResult[] = []
+
+    for (const platform of platformsTracked) {
+        core.info(`Collecting ${platform} metrics...`)
+        switch (platform) {
+            case 'NPM':
+                console.log(`Collecting NPM metrics for ${npmPackages.join(', ')}`)
+                console.time(`Collecting NPM metrics`)
+                metricPromises.push(collectNpmBatch(npmPackages).then(results => {
+                    console.timeEnd(`Collecting NPM metrics`)
+                    return results
+                }))
+                break
+            case 'GitHub':
+                console.log(`Collecting GitHub metrics for ${githubRepositories.join(', ')}`)
+                console.time(`Collecting GitHub metrics`)
+                metricPromises.push(collectGithubBatch(githubRepositories).then(results => {
+                    console.timeEnd(`Collecting GitHub metrics`)
+                    return results
+                }))
+                break
+            case 'PyPI':
+                console.log(`Collecting PyPI metrics for ${pypiPackages.join(', ')}`)
+                console.time(`Collecting PyPI metrics`)
+                metricPromises.push(collectPypiBatch(pypiPackages).then(results => {
+                    console.timeEnd(`Collecting PyPI metrics`)
+                    return results
+                }))
+                break
+            case 'PowerShell':
+                console.log(`Collecting PowerShell metrics for ${powershellModules.join(', ')}`)
+                console.time(`Collecting PowerShell metrics`)
+                metricPromises.push(collectPowerShellBatch(powershellModules).then(results => {
+                    console.timeEnd(`Collecting PowerShell metrics`)
+                    return results
+                }))
+                break
+        }
     }
 
-    // Write CSV output
-    if (csvOutputPath) {
-      const csvReport = await manager.exportReport('csv');
-      await fs.writeFile(csvOutputPath, csvReport);
-      core.info(`📊 CSV report written to ${csvOutputPath}`);
-      core.setOutput('csv-output', csvOutputPath);
+    console.log('All metrics collecting started')
+
+    const metricResults = await Promise.all(metricPromises)
+    metrics.push(...metricResults.flat())
+
+    console.log('All metrics collecting completed')
+
+    if (updateReadme) { 
+        console.log('Updating repository readme...')
+        await updateRepositoryReadme(metrics, readmePath)
     }
 
-    // Write human-readable report
-    if (reportOutputPath) {
-      const reportContent = await generateHumanReadableReport(report);
-      await fs.writeFile(reportOutputPath, reportContent);
-      core.info(`📋 Human-readable report written to ${reportOutputPath}`);
-      core.setOutput('report-output', reportOutputPath);
+    console.log('Repository readme updated')
+
+    // Persist full result set to JSON for downstream consumption
+    try {
+        await writeFile(jsonOutputPath, JSON.stringify(metrics, null, 2), 'utf8')
+        core.setOutput('json-output', jsonOutputPath)
+        console.log(`Wrote metrics JSON to ${jsonOutputPath}`)
+    } catch (writeErr) {
+        console.warn(`Failed to write metrics JSON to ${jsonOutputPath}:`, writeErr)
     }
 
-    // Update README if requested
-    if (updateReadme && readmePath) {
-      try {
-        await updateReadmeWithStats(report, readmePath);
-        core.info(`📝 README updated at ${readmePath}`);
-      } catch (error) {
-        core.warning(`Failed to update README: ${error}`);
-      }
-    }
-
-    // Set outputs
-    core.setOutput('total-downloads', report.totalDownloads.toString());
-    core.setOutput('unique-packages', report.uniquePackages.toString());
-    core.setOutput('platforms-tracked', report.platforms.join(','));
-
-    core.info('✅ Usage Statistics Tracker completed successfully!');
-
-  } catch (error) {
-    core.setFailed(`Action failed: ${error}`);
-  }
+    core.setOutput('commit-message', commitMessage)
+} catch (error) {
+    // Fail the workflow run if an error occurs
+    if (error instanceof Error) core.setFailed(error.message)
 }
 
-async function generateHumanReadableReport(report: any): Promise<string> {
-  let content = '# Usage Statistics Summary\n\n';
-  content += `Generated on: ${new Date().toISOString()}\n\n`;
-
-  // Overall Summary
-  content += '## Overall Summary\n\n';
-  content += `- **Total Downloads**: ${report.totalDownloads.toLocaleString()}\n`;
-  content += `- **Unique Packages**: ${report.uniquePackages}\n`;
-  content += `- **Platforms Tracked**: ${report.platforms.join(', ')}\n\n`;
-
-  // Platform Totals
-  content += '## Platform Totals\n\n';
-  for (const [platform, data] of Object.entries(report.platformBreakdown)) {
-    content += `### ${platform.toUpperCase()}\n`;
-    content += `- **Downloads**: ${data.totalDownloads.toLocaleString()}\n`;
-    content += `- **Packages**: ${data.uniquePackages}\n\n`;
-  }
-
-  // Package Rankings
-  content += '## Package Rankings\n\n';
-  report.topPackages.forEach((pkg: any, index: number) => {
-    content += `${index + 1}. **${pkg.name}** (${pkg.platform}) - ${pkg.downloads.toLocaleString()} downloads\n`;
-  });
-
-  return content;
-}
-
-async function updateReadmeWithStats(report: any, readmePath: string) {
-  const STATS_MARKER_START = '<!-- USAGE_STATS_START -->';
-  const STATS_MARKER_END = '<!-- USAGE_STATS_END -->';
-
-  try {
-    const readmeContent = await fs.readFile(readmePath, 'utf-8');
-    
-    const statsSection = `
-## 📊 Usage Statistics
-
-Last updated: ${new Date().toISOString()}
-
-### Summary
-- **Total Downloads**: ${report.totalDownloads.toLocaleString()}
-- **Unique Packages**: ${report.uniquePackages}
-- **Platforms Tracked**: ${report.platforms.join(', ')}
-
-### Platform Totals
-${Object.entries(report.platformBreakdown).map(([platform, data]: [string, any]) => 
-  `- **${platform.toUpperCase()}**: ${data.totalDownloads.toLocaleString()} downloads (${data.uniquePackages} packages)`
-).join('\n')}
-
-### Top Packages
-${report.topPackages.map((pkg: any, index: number) => 
-  `${index + 1}. **${pkg.name}** (${pkg.platform}) - ${pkg.downloads.toLocaleString()} downloads`
-).join('\n')}
-`;
-
-    const startMarker = readmeContent.indexOf(STATS_MARKER_START);
-    const endMarker = readmeContent.indexOf(STATS_MARKER_END);
-    
-    if (startMarker !== -1 && endMarker !== -1) {
-      const beforeStats = readmeContent.substring(0, startMarker + STATS_MARKER_START.length);
-      const afterStats = readmeContent.substring(endMarker);
-      const updatedContent = beforeStats + statsSection + afterStats;
-      await fs.writeFile(readmePath, updatedContent);
-    } else {
-      core.warning(`Stats markers not found in README. Please add ${STATS_MARKER_START} and ${STATS_MARKER_END} markers.`);
-    }
-  } catch (error) {
-    throw new Error(`Failed to update README: ${error}`);
-  }
-}
-
-// Run the action
-if (import.meta.main) {
-  run();
-} 
