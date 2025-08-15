@@ -10,8 +10,7 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "bun --watch --env-file=.dev.env --env-file=.env run src/action.ts",
-    "test:pypi": "bun run test-pypi-bigquery.ts",
-    "test:pypi-detailed": "bun run test-pypi-detailed.ts"
+    "build": "tsc -p tsconfig.build.json"
   },
   "devDependencies": {
     "@types/bun": "latest",
