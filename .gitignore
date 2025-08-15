@@ -7,6 +7,7 @@ yarn-error.log*
 # Build outputs
 build/
 *.tsbuildinfo
+dist/
 
 # Environment variables
 .env

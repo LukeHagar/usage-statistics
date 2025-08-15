@@ -50,7 +50,7 @@ async function fetchChunk(start: Date, end: Date, packageName: string): Promise<
   if (!res.ok) {
     throw new Error(`Failed to fetch data: ${res.status} ${res.statusText}`);
   }
-  const json = await res.json();
+  const json = await res.json() as any;
   return json.downloads;
 }
 
@@ -80,7 +80,7 @@ export async function collectNpm(packageName: string): Promise<MetricResult> {
     // Get package info from npm registry
     const packageUrl = `https://registry.npmjs.org/${packageName}`;
     const packageResponse = await fetch(packageUrl);
-    const packageData: NpmPackageInfo = await packageResponse.json();
+    const packageData: NpmPackageInfo = await packageResponse.json() as NpmPackageInfo;
 
     // Get download statistics
     let downloadsMonthly
@@ -91,7 +91,7 @@ export async function collectNpm(packageName: string): Promise<MetricResult> {
       // Monthly downloads
       const monthlyUrl = `https://api.npmjs.org/downloads/point/last-month/${packageName}`;
       const monthlyResponse = await fetch(monthlyUrl);
-      const monthlyData: NpmDownloadStats = await monthlyResponse.json();
+      const monthlyData: NpmDownloadStats = await monthlyResponse.json() as NpmDownloadStats;
       downloadsMonthly = monthlyData.downloads || null;
     } catch (error) {
       console.warn(`Could not fetch NPM monthly downloads for ${packageName}:`, error);
@@ -101,7 +101,7 @@ export async function collectNpm(packageName: string): Promise<MetricResult> {
       // Weekly downloads
       const weeklyUrl = `https://api.npmjs.org/downloads/point/last-week/${packageName}`;
       const weeklyResponse = await fetch(weeklyUrl);
-      const weeklyData: NpmDownloadStats = await weeklyResponse.json();
+      const weeklyData: NpmDownloadStats = await weeklyResponse.json() as NpmDownloadStats;
       downloadsWeekly = weeklyData.downloads || null;
     } catch (error) {
       console.warn(`Could not fetch NPM weekly downloads for ${packageName}:`, error);
@@ -111,7 +111,7 @@ export async function collectNpm(packageName: string): Promise<MetricResult> {
       // Daily downloads
       const dailyUrl = `https://api.npmjs.org/downloads/point/last-day/${packageName}`;
       const dailyResponse = await fetch(dailyUrl);
-      const dailyData: NpmDownloadStats = await dailyResponse.json();
+      const dailyData: NpmDownloadStats = await dailyResponse.json() as NpmDownloadStats;
       downloadsDaily = dailyData.downloads || null;
     } catch (error) {
       console.warn(`Could not fetch NPM daily downloads for ${packageName}:`, error);

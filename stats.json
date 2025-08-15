@@ -2,7 +2,7 @@
   {
     "platform": "NPM",
     "name": "sailpoint-api-client",
-    "timestamp": "2025-08-15T02:11:27.288Z",
+    "timestamp": "2025-08-15T02:38:00.197Z",
     "metrics": {
       "downloadsTotal": 16740,
       "downloadsMonthly": 1308,
@@ -3611,7 +3611,7 @@
   {
     "platform": "GitHub",
     "name": "sailpoint-oss/sailpoint-cli",
-    "timestamp": "2025-08-15T02:11:29.099Z",
+    "timestamp": "2025-08-15T02:38:02.906Z",
     "metrics": {
       "stars": 35,
       "forks": 24,
@@ -3796,7 +3796,7 @@
   {
     "platform": "PyPI",
     "name": "sailpoint",
-    "timestamp": "2025-08-15T02:11:25.888Z",
+    "timestamp": "2025-08-15T02:38:00.079Z",
     "metrics": {
       "downloadsTotal": 21614,
       "downloadsMonthly": 10108,
@@ -7443,7 +7443,7 @@
   {
     "platform": "PowerShell",
     "name": "PSSailPoint",
-    "timestamp": "2025-08-15T02:11:28.449Z",
+    "timestamp": "2025-08-15T02:38:02.518Z",
     "metrics": {
       "downloadsTotal": 20447,
       "downloadsRange": [
@@ -7623,7 +7623,7 @@
   {
     "platform": "PowerShell",
     "name": "PSSailpoint.V3",
-    "timestamp": "2025-08-15T02:11:26.467Z",
+    "timestamp": "2025-08-15T02:38:00.476Z",
     "metrics": {
       "downloadsTotal": 11721,
       "downloadsRange": [
@@ -7738,7 +7738,7 @@
   {
     "platform": "PowerShell",
     "name": "PSSailpoint.Beta",
-    "timestamp": "2025-08-15T02:11:27.208Z",
+    "timestamp": "2025-08-15T02:38:01.195Z",
     "metrics": {
       "downloadsTotal": 12049,
       "downloadsRange": [
@@ -7853,7 +7853,7 @@
   {
     "platform": "PowerShell",
     "name": "PSSailpoint.V2024",
-    "timestamp": "2025-08-15T02:11:26.888Z",
+    "timestamp": "2025-08-15T02:38:00.920Z",
     "metrics": {
       "downloadsTotal": 11716,
       "downloadsRange": [
@@ -7968,7 +7968,7 @@
   {
     "platform": "PowerShell",
     "name": "PSSailpoint.V2025",
-    "timestamp": "2025-08-15T02:11:26.285Z",
+    "timestamp": "2025-08-15T02:38:00.288Z",
     "metrics": {
       "downloadsTotal": 1009,
       "downloadsRange": [
