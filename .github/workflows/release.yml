@@ -75,7 +75,7 @@ jobs:
           echo "Checking built files..."
           ls -la dist/
           echo "Testing action execution..."
-          node -e "console.log('Testing action import...'); require('./dist/action.js'); console.log('✅ Action loaded successfully')"
+          node -e "console.log('Testing action import...'); import('./dist/action.js').then(() => console.log('✅ Action loaded successfully')).catch(err => { console.error('❌ Action load failed:', err.message); process.exit(1); })"
 
       - name: Bump version
         id: bump
