@@ -7,6 +7,30 @@ import semver from "semver";
 // Register all Chart.js controllers
 Chart.register(...registerables);
 
+/**
+ * Safely compare two version strings using semver
+ * Falls back to string comparison if semver parsing fails
+ */
+function safeSemverCompare(a: string, b: string): number {
+    try {
+        // Clean and validate versions
+        const cleanA = a.trim();
+        const cleanB = b.trim();
+        
+        // Check if versions are valid semver
+        if (!semver.valid(cleanA) || !semver.valid(cleanB)) {
+            // Fall back to string comparison for invalid semver
+            return cleanA.localeCompare(cleanB);
+        }
+        
+        return semver.compare(cleanA, cleanB);
+    } catch (error) {
+        console.warn(`Semver comparison failed for "${a}" vs "${b}":`, error);
+        // Fall back to string comparison
+        return a.trim().localeCompare(b.trim());
+    }
+}
+
 export function formatGitHubSummary(summary: string, platformMetrics: MetricResult[]): string {
     let totalStars = 0
     let totalForks = 0
@@ -97,7 +121,7 @@ export async function createGitHubReleaseChart(platformMetrics: MetricResult[], 
 function groupByReleaseCumulative(releaseRange: { day: string, downloads: number, tagName?: string }[]){
     const releases: Record<string, {downloads: number, tagName: string}> = {}
     for (const release of releaseRange.sort((a, b) => {
-        return semver.compare((a.tagName || '0.0.0').trim(), (b.tagName || '0.0.0').trim())
+        return safeSemverCompare(a.tagName || '0.0.0', b.tagName || '0.0.0')
     })) {
         if (!release.tagName) {
             continue
@@ -112,7 +136,7 @@ function groupByReleaseCumulative(releaseRange: { day: string, downloads: number
     let cumulativeDownloads = 0
 
     for (const release of Object.keys(releases).sort((a, b) => {
-        return semver.compare(a.trim(), b.trim())
+        return safeSemverCompare(a, b)
     })) {
         cumulativeDownloads += releases[release].downloads
         releases[release].downloads = cumulativeDownloads
@@ -126,7 +150,7 @@ export async function createDownloadsPerReleaseChart(metric: MetricResult, outpu
     const svgOutputPath = `${outputPath}/${metric.name.replace('/', '-')}-release-downloads.svg`
 
     const sortedReleases = downloadsRange.sort((a: { tagName?: string }, b: { tagName?: string }) => {
-        return semver.compare((a.tagName || '0.0.0').trim(), (b.tagName || '0.0.0').trim())
+        return safeSemverCompare(a.tagName || '0.0.0', b.tagName || '0.0.0')
     })
 
     const canvas = new Canvas(1000, 800);
@@ -191,7 +215,7 @@ export async function createCumulativeDownloadsChart(metric: MetricResult, outpu
 
     // Sort months chronologically
     const semVerSortedReleases = Object.keys(groupedDownloads).sort((a, b) => {
-        return semver.compare(a.trim(), b.trim())
+        return safeSemverCompare(a, b)
     })
 
     const canvas = new Canvas(1000, 800);
@@ -259,7 +283,7 @@ export async function createReleaseDownloadsChart(metric: MetricResult, outputPa
         .filter((release: { tagName?: string; downloads: number; day: string }) => release.tagName && release.downloads > 0)
         .sort((a: { downloads: number }, b: { downloads: number }) => b.downloads - a.downloads)
         .slice(0, 10) // Show top 10 releases
-        .sort((a: { tagName?: string }, b: { tagName?: string }) => semver.compare((a.tagName || '0.0.0').trim(), (b.tagName || '0.0.0').trim()))
+        .sort((a: { tagName?: string }, b: { tagName?: string }) => safeSemverCompare(a.tagName || '0.0.0', b.tagName || '0.0.0'))
 
     if (sortedReleases.length === 0) {
         // Return empty chart if no releases
