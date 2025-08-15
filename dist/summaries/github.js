@@ -81,7 +81,7 @@ export async function createGitHubReleaseChart(platformMetrics, outputPath) {
 function groupByReleaseCumulative(releaseRange) {
     const releases = {};
     for (const release of releaseRange.sort((a, b) => {
-        return semver.compare(a.tagName || '0.0.0', b.tagName || '0.0.0');
+        return semver.compare((a.tagName || '0.0.0').trim(), (b.tagName || '0.0.0').trim());
     })) {
         if (!release.tagName) {
             continue;
@@ -95,7 +95,7 @@ function groupByReleaseCumulative(releaseRange) {
     }
     let cumulativeDownloads = 0;
     for (const release of Object.keys(releases).sort((a, b) => {
-        return semver.compare(a, b);
+        return semver.compare(a.trim(), b.trim());
     })) {
         cumulativeDownloads += releases[release].downloads;
         releases[release].downloads = cumulativeDownloads;
@@ -106,7 +106,7 @@ export async function createDownloadsPerReleaseChart(metric, outputPath) {
     const downloadsRange = metric.metrics?.downloadRange || [];
     const svgOutputPath = `${outputPath}/${metric.name.replace('/', '-')}-release-downloads.svg`;
     const sortedReleases = downloadsRange.sort((a, b) => {
-        return semver.compare(a.tagName || '0.0.0', b.tagName || '0.0.0');
+        return semver.compare((a.tagName || '0.0.0').trim(), (b.tagName || '0.0.0').trim());
     });
     const canvas = new Canvas(1000, 800);
     const chart = new Chart(canvas, {
@@ -163,7 +163,7 @@ export async function createCumulativeDownloadsChart(metric, outputPath) {
     const groupedDownloads = groupByReleaseCumulative(downloadsRange);
     // Sort months chronologically
     const semVerSortedReleases = Object.keys(groupedDownloads).sort((a, b) => {
-        return semver.compare(a, b);
+        return semver.compare(a.trim(), b.trim());
     });
     const canvas = new Canvas(1000, 800);
     const chart = new Chart(canvas, {
@@ -224,7 +224,7 @@ export async function createReleaseDownloadsChart(metric, outputPath) {
         .filter((release) => release.tagName && release.downloads > 0)
         .sort((a, b) => b.downloads - a.downloads)
         .slice(0, 10) // Show top 10 releases
-        .sort((a, b) => semver.compare(a.tagName || '0.0.0', b.tagName || '0.0.0'));
+        .sort((a, b) => semver.compare((a.tagName || '0.0.0').trim(), (b.tagName || '0.0.0').trim()));
     if (sortedReleases.length === 0) {
         // Return empty chart if no releases
         return svgOutputPath;
