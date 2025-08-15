@@ -96,25 +96,67 @@ gcloud auth application-default login
 
 ### As a GitHub Action
 
+> **⚠️ Important**: This action requires native dependencies for chart generation. Run the setup command before using the action.
+> 
+> **What happens if you skip this step?** The action will fail with a `Cannot find module '../v8'` error when trying to generate charts. The setup command installs the system libraries needed to compile the native `skia-canvas` module.
+
+**Quick Start:**
 ```yaml
+- name: Install dependencies
+  run: sudo apt-get update && sudo apt-get install -y build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev libpixman-1-dev pkg-config python3 make g++ libstdc++6
+
 - name: Usage Statistics Tracker
   uses: LukeHagar/usage-statistics@v1
   with:
     npm-packages: 'lodash,axios'
     github-repositories: 'microsoft/vscode,facebook/react'
     pypi-packages: 'requests,numpy'
-    homebrew-formulas: 'git,node'
     powershell-modules: 'PowerShellGet,PSReadLine'
-    postman-collections: '12345,67890'
-    # go-modules removed
     json-output-path: 'stats.json'
-    csv-output-path: 'stats.csv'
-    report-output-path: 'report.md'
     update-readme: 'true'
     github-token: ${{ secrets.GITHUB_TOKEN }}
-  # env:
-  #   PYPI_STATS_BASE_URL: https://your-host
 ```
+
+**Detailed Setup:**
+```yaml
+- name: Install system dependencies for skia-canvas
+  run: |
+    sudo apt-get update
+    sudo apt-get install -y build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev libpixman-1-dev pkg-config python3 make g++ libstdc++6
+
+- name: Usage Statistics Tracker
+  uses: LukeHagar/usage-statistics@v1
+  with:
+    npm-packages: 'lodash,axios'
+    github-repositories: 'microsoft/vscode,facebook/react'
+    pypi-packages: 'requests,numpy'
+    powershell-modules: 'PowerShellGet,PSReadLine'
+    json-output-path: 'stats.json'
+    update-readme: 'true'
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+```
+
+#### Alternative: One-Line Setup
+
+For convenience, you can use this one-liner to install all dependencies:
+
+```yaml
+- name: Install dependencies
+  run: sudo apt-get update && sudo apt-get install -y build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev libpixman-1-dev pkg-config python3 make g++ libstdc++6
+
+- name: Usage Statistics Tracker
+  uses: LukeHagar/usage-statistics@v1
+  with:
+    npm-packages: 'lodash,axios'
+    github-repositories: 'microsoft/vscode,facebook/react'
+    pypi-packages: 'requests,numpy'
+    powershell-modules: 'PowerShellGet,PSReadLine'
+    json-output-path: 'stats.json'
+    update-readme: 'true'
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+```
+
+> **💡 Tip**: The one-liner is the same as the "Quick Start" example above - just a more compact format!
 
 ### Local Development
 
