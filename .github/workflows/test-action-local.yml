@@ -50,12 +50,12 @@ jobs:
       env:
         NODE_ENV: production
         SKIA_CANVAS_USE_SYSTEM_LIBRARIES: 1
-        NODE_PATH: ${{ github.workspace }}/node_modules
       run: |
-        # Try rebuilding with npm first, then bun
-        npm rebuild skia-canvas || bun rebuild skia-canvas
+        # Rebuild skia-canvas native modules
+        cd node_modules/skia-canvas && npm rebuild
+        cd ../..
         # Debug: Check what's in the skia-canvas directory
-        ls -la node_modules/skia-canvas/lib/classes/
+        ls -la node_modules/skia-canvas/lib/
         # Verify the module can be loaded
         node -e "console.log('Testing skia-canvas import...'); require('skia-canvas'); console.log('✅ skia-canvas loaded successfully')"
 
