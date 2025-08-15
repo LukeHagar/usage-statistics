@@ -35,7 +35,7 @@ export function getInputs() {
     const pypiPackages = core.getInput('pypi-packages')
     const powershellModules = core.getInput('powershell-modules')
     const jsonOutputPath = core.getInput('json-output-path')
-    const updateReadme = core.getBooleanInput('update-readme')
+    const updateReadme = core.getInput('update-readme').toLowerCase() === 'true'
     const commitMessage = core.getInput('commit-message')
     const readmePath = core.getInput('readme-path')
 
