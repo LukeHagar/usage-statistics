@@ -1,43 +1,31 @@
-name: Release
-
+name: Auto Release
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version to release (patch, minor, major)'
-        required: true
-        default: 'patch'
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
-
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "**.md"
+      - .github/workflows/auto-release.yml
 permissions:
   contents: write
-
 jobs:
-  release:
+  auto-release:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-
+          node-version: "20"
+          cache: npm
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
-
       - name: Install system dependencies for skia-canvas
         run: |
           sudo apt-get update
@@ -54,72 +42,123 @@ jobs:
             make \
             g++ \
             libstdc++6
-
       - name: Install dependencies
         run: bun install
-
       - name: Rebuild native modules
         env:
           NODE_ENV: production
           SKIA_CANVAS_USE_SYSTEM_LIBRARIES: 1
-        run: |
+        run: >
           cd node_modules/skia-canvas && npm rebuild
-          cd ../..
-          node -e "console.log('Testing skia-canvas import...'); require('skia-canvas'); console.log('✅ skia-canvas loaded successfully')"
 
+          cd ../..
+
+          node -e "console.log('Testing skia-canvas import...');
+          require('skia-canvas'); console.log('✅ skia-canvas loaded
+          successfully')"
       - name: Build action
         run: bun run build
-
       - name: Verify build
-        run: |
+        run: >
           echo "Checking built files..."
-          ls -la dist/
-          echo "Testing action execution..."
-          node -e "console.log('Testing action import...'); import('./dist/action.js').then(() => console.log('✅ Action loaded successfully')).catch(err => { console.error('❌ Action load failed:', err.message); process.exit(1); })"
 
+          ls -la dist/
+
+          echo "Testing action execution..."
+
+          node -e "console.log('Testing action import...');
+          import('./dist/action.js').then(() => console.log('✅ Action loaded
+          successfully')).catch(err => { console.error('❌ Action load failed:',
+          err.message); process.exit(1); })"
+      - name: Get commit history
+        id: commits
+        uses: actions/github-script@v7
+        with:
+          script: >
+            const { execSync } = require('child_process');
+
+
+            // Get commits since last tag
+
+            const lastTag = execSync('git describe --tags --abbrev=0 2>/dev/null
+            || echo ""', { encoding: 'utf8' }).trim();
+
+            const commits = execSync(`git log ${lastTag ? lastTag + '..HEAD' :
+            '--oneline'} --pretty=format:"%s"`, { encoding: 'utf8'
+            }).trim().split('\n');
+
+
+            console.log('Commits since last tag:', commits);
+
+
+            return { commits: commits.join('\n') };
+      - name: Determine version bump
+        id: version
+        run: |
+          # Always bump patch version for auto-releases
+          echo "bump_type=patch" >> $GITHUB_OUTPUT
+          echo "Bump type: ${{ steps.version.outputs.bump_type }}"
       - name: Bump version
         id: bump
-        run: |
+        run: >
           # Get current version
-          CURRENT_VERSION=$(node -p "require('./package.json').version")
-          echo "Current version: $CURRENT_VERSION"
-          
-          # Bump version
-          NEW_VERSION=$(npm version ${{ github.event.inputs.version }} --no-git-tag-version)
-          echo "New version: $NEW_VERSION"
-          
-          # Remove 'v' prefix if present
-          NEW_VERSION=${NEW_VERSION#v}
-          echo "Cleaned version: $NEW_VERSION"
-          
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
 
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+
+          echo "Current version: $CURRENT_VERSION"
+
+
+          # Bump version
+
+          NEW_VERSION=$(npm version ${{ steps.version.outputs.bump_type }}
+          --no-git-tag-version)
+
+          echo "New version: $NEW_VERSION"
+
+
+          # Remove 'v' prefix if present
+
+          NEW_VERSION=${NEW_VERSION#v}
+
+          echo "Cleaned version: $NEW_VERSION"
+
+
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
       - name: Commit version bump and built files
-        run: |
+        run: >
           git config user.name "github-actions[bot]"
+
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
           git add package.json dist/
+
           # Check if there are changes to commit
+
           if git diff --staged --quiet; then
             echo "No changes to commit, skipping commit"
           else
             git commit -m "chore: bump version to ${{ steps.bump.outputs.new_version }} and build action"
             git push
           fi
-
       - name: Check if release exists and handle tag/release
         id: release_check
         uses: actions/github-script@v7
         with:
-          script: |
+          script: >
             const { execSync } = require('child_process');
-            
+
+
             const tagName = 'v${{ steps.bump.outputs.new_version }}';
-            const tagExists = execSync(`git tag -l "${tagName}"`, { encoding: 'utf8' }).trim() === tagName;
-            
+
+            const tagExists = execSync(`git tag -l "${tagName}"`, { encoding:
+            'utf8' }).trim() === tagName;
+
+
             console.log(`Tag ${tagName} exists: ${tagExists}`);
-            
+
+
             if (tagExists) {
               // Check if release exists for this tag
               try {
@@ -138,61 +177,98 @@ jobs:
               console.log(`Tag ${tagName} does not exist`);
               return { tagExists: false, releaseExists: false };
             }
-
       - name: Bump version again if release exists
-        if: steps.release_check.outputs.tagExists == 'true' && steps.release_check.outputs.releaseExists == 'true'
+        if: steps.release_check.outputs.tagExists == 'true' &&
+          steps.release_check.outputs.releaseExists == 'true'
         id: rebump
-        run: |
-          echo "Release already exists for v${{ steps.bump.outputs.new_version }}, bumping version again"
-          NEW_VERSION=$(npm version patch --no-git-tag-version)
-          NEW_VERSION=${NEW_VERSION#v}
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "Bumped to: $NEW_VERSION"
+        run: >
+          echo "Release already exists for v${{ steps.bump.outputs.new_version
+          }}, bumping version again"
 
+          NEW_VERSION=$(npm version patch --no-git-tag-version)
+
+          NEW_VERSION=${NEW_VERSION#v}
+
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+          echo "Bumped to: $NEW_VERSION"
       - name: Create and push tag
-        run: |
-          TAG_VERSION="${{ steps.release_check.outputs.releaseExists == 'true' && steps.rebump.outputs.new_version || steps.bump.outputs.new_version }}"
+        run: >
+          TAG_VERSION="${{ steps.release_check.outputs.releaseExists == 'true'
+          && steps.rebump.outputs.new_version || steps.bump.outputs.new_version
+          }}"
+
           echo "Creating tag: v$TAG_VERSION"
-          
+
+
           # Check if tag already exists
+
           if git tag -l "v$TAG_VERSION" | grep -q "v$TAG_VERSION"; then
             echo "Tag v$TAG_VERSION already exists, skipping tag creation"
           else
             git tag v$TAG_VERSION
             git push origin v$TAG_VERSION
           fi
-
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ steps.release_check.outputs.releaseExists == 'true' && steps.rebump.outputs.new_version || steps.bump.outputs.new_version }}
-          release_name: Release v${{ steps.release_check.outputs.releaseExists == 'true' && steps.rebump.outputs.new_version || steps.bump.outputs.new_version }}
+          tag_name: v${{ steps.release_check.outputs.releaseExists == 'true' &&
+            steps.rebump.outputs.new_version || steps.bump.outputs.new_version
+            }}
+          release_name: Release v${{ steps.release_check.outputs.releaseExists == 'true'
+            && steps.rebump.outputs.new_version ||
+            steps.bump.outputs.new_version }}
+          body: >
+            ## 🎉 Release v${{ steps.release_check.outputs.releaseExists ==
+            'true' && steps.rebump.outputs.new_version ||
+            steps.bump.outputs.new_version }}
+
+
+            ### Changes:
+
+            ${{ steps.commits.outputs.commits }}
+
+
+            ### Usage:
+
+            Update your workflows to use:
+
+            ```yaml
+
+            uses: LukeHagar/usage-statistics@v${{
+            steps.release_check.outputs.releaseExists == 'true' &&
+            steps.rebump.outputs.new_version || steps.bump.outputs.new_version
+            }}
+
+            ```
           draft: false
           prerelease: false
         continue-on-error: true
+      - name: Update latest tag
+        run: >
+          RELEASE_VERSION="${{ steps.release_check.outputs.releaseExists ==
+          'true' && steps.rebump.outputs.new_version ||
+          steps.bump.outputs.new_version }}"
 
-      - name: Update action.yml version reference
-        run: |
-          # Update the action.yml to reference the new version
-          sed -i "s/uses: LukeHagar\/usage-statistics@v[0-9]*\.[0-9]*\.[0-9]*/uses: LukeHagar\/usage-statistics@v${{ steps.bump.outputs.new_version }}/g" .github/workflows/test-action-local.yml
-          git add .github/workflows/test-action-local.yml
-          git commit -m "chore: update test workflow to use v${{ steps.bump.outputs.new_version }}" || echo "No changes to commit"
-          git push
+          echo "Updating latest tag to point to v$RELEASE_VERSION"
 
-      - name: Comment on release
-        run: |
-          echo "## 🎉 Release v${{ steps.bump.outputs.new_version }} Published!"
-          echo ""
-          echo "### What's New:"
-          echo "- Version bumped from ${{ steps.bump.outputs.current_version }} to ${{ steps.bump.outputs.new_version }}"
-          echo "- Action built and tested successfully"
-          echo "- Release assets uploaded"
-          echo ""
-          echo "### Usage:"
-          echo "Update your workflows to use:"
-          echo "```yaml"
-          echo "uses: LukeHagar/usage-statistics@v${{ steps.bump.outputs.new_version }}"
-          echo "```"
+
+          # Delete existing latest tag if it exists
+
+          if git tag -l "latest" | grep -q "latest"; then
+            git tag -d latest
+            git push origin :refs/tags/latest || echo "Latest tag didn't exist remotely"
+          fi
+
+
+          # Create new latest tag pointing to the current release
+
+          git tag latest v$RELEASE_VERSION
+
+          git push origin latest
+
+
+          echo "✅ Latest tag updated to v$RELEASE_VERSION"
