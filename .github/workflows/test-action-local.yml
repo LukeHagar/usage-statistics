@@ -24,133 +24,38 @@ jobs:
       run: bun install
 
     - name: Build action
-      run: bun run action:build
+      run: bun run build
 
-    - name: Test local action with preview mode
-      id: test-preview-local
+    - name: Run local action against test packages (updates Test-Readme.md)
+      id: run-action
       uses: ./
       with:
-        preview-mode: 'true'
-        json-output-path: 'local-stats.json'
-        csv-output-path: 'local-stats.csv'
-        report-output-path: 'local-report.md'
-        update-readme: 'false'
+        npm-packages: 'sailpoint-api-client'
+        github-repositories: 'sailpoint-oss/sailpoint-cli'
+        pypi-packages: 'sailpoint'
+        powershell-modules: 'PSSailPoint,PSSailpoint.V3,PSSailpoint.Beta,PSSailpoint.V2024,PSSailpoint.V2025'
+        json-output-path: 'stats.json'
+        update-readme: 'true'
+        readme-path: 'Test-Readme.md'
         github-token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Test local action with real data
-      id: test-real-local
-      uses: ./
-      with:
-        npm-packages: 'lodash,axios'
-        github-repositories: 'microsoft/vscode'
-        pypi-packages: 'requests'
-        homebrew-formulas: 'git'
-        go-modules: 'github.com/go-chi/chi'
-        json-output-path: 'local-real-stats.json'
-        csv-output-path: 'local-real-stats.csv'
-        report-output-path: 'local-real-report.md'
-        update-readme: 'false'
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Check local preview mode outputs
+    - name: Check generated outputs
       run: |
-        echo "=== Local Preview Mode Test Results ==="
-        echo "Checking generated files..."
-        ls -la local-stats.* local-report.md || echo "No output files found (expected in preview mode)"
-        
-        echo "Checking action outputs..."
-        echo "JSON output: ${{ steps.test-preview-local.outputs.json-output }}"
-        echo "CSV output: ${{ steps.test-preview-local.outputs.csv-output }}"
-        echo "Report output: ${{ steps.test-preview-local.outputs.report-output }}"
-        echo "Total downloads: ${{ steps.test-preview-local.outputs.total-downloads }}"
-        echo "Unique packages: ${{ steps.test-preview-local.outputs.unique-packages }}"
-        echo "Platforms tracked: ${{ steps.test-preview-local.outputs.platforms-tracked }}"
-
-    - name: Check local real data outputs
-      run: |
-        echo "=== Local Real Data Test Results ==="
-        echo "Checking generated files..."
-        ls -la local-real-stats.* local-real-report.md || echo "No output files found"
-        
-        echo "Checking action outputs..."
-        echo "JSON output: ${{ steps.test-real-local.outputs.json-output }}"
-        echo "CSV output: ${{ steps.test-real-local.outputs.csv-output }}"
-        echo "Report output: ${{ steps.test-real-local.outputs.report-output }}"
-        echo "Total downloads: ${{ steps.test-real-local.outputs.total-downloads }}"
-        echo "Unique packages: ${{ steps.test-real-local.outputs.unique-packages }}"
-        echo "Platforms tracked: ${{ steps.test-real-local.outputs.platforms-tracked }}"
-
-    - name: Validate local JSON output structure
-      run: |
-        echo "=== Validating Local JSON Output Structure ==="
-        if [ -f "local-real-stats.json" ]; then
-          echo "Local real stats JSON structure:"
-          jq '.' local-real-stats.json | head -20
-        fi
-        
-        if [ -f "local-stats.json" ]; then
-          echo "Local preview stats JSON structure:"
-          jq '.' local-stats.json | head -20
+        echo "=== Checking Generated Outputs ==="
+        ls -la stats.json Test-Readme.md
+        echo "--- stats.json (first 40 lines) ---"
+        head -40 stats.json | sed 's/.*/    &/'
+        echo "--- Test-Readme.md (first 60 lines) ---"
+        head -60 Test-Readme.md | sed 's/.*/    &/'
+        echo "--- Validate README markers updated ---"
+        if grep -q "<!-- METRICS_START -->" Test-Readme.md && grep -q "<!-- METRICS_END -->" Test-Readme.md; then
+          echo "✅ README markers present"
+        else
+          echo "❌ README markers missing" && exit 1
         fi
 
-    - name: Validate local CSV output
+    - name: Validate JSON structure (basic)
       run: |
-        echo "=== Validating Local CSV Output ==="
-        if [ -f "local-real-stats.csv" ]; then
-          echo "Local real stats CSV structure:"
-          head -5 local-real-stats.csv
-          echo "Total lines in CSV: $(wc -l < local-real-stats.csv)"
-        fi
-        
-        if [ -f "local-stats.csv" ]; then
-          echo "Local preview stats CSV structure:"
-          head -5 local-stats.csv
-          echo "Total lines in CSV: $(wc -l < local-stats.csv)"
-        fi
-
-    - name: Validate local report output
-      run: |
-        echo "=== Validating Local Report Output ==="
-        if [ -f "local-real-report.md" ]; then
-          echo "Local real report content (first 20 lines):"
-          head -20 local-real-report.md
-        fi
-        
-        if [ -f "local-report.md" ]; then
-          echo "Local preview report content (first 20 lines):"
-          head -20 local-report.md
-        fi
-
-    - name: Compare outputs with expected structure
-      run: |
-        echo "=== Comparing Outputs with Expected Structure ==="
-        
-        # Check if JSON files have the expected structure
-        for json_file in local-stats.json local-real-stats.json; do
-          if [ -f "$json_file" ]; then
-            echo "Validating $json_file structure..."
-            if jq -e '.summary' "$json_file" > /dev/null 2>&1; then
-              echo "✅ $json_file has valid summary structure"
-            else
-              echo "❌ $json_file missing summary structure"
-            fi
-            
-            if jq -e '.platforms' "$json_file" > /dev/null 2>&1; then
-              echo "✅ $json_file has valid platforms structure"
-            else
-              echo "❌ $json_file missing platforms structure"
-            fi
-          fi
-        done
-        
-        # Check if CSV files have expected headers
-        for csv_file in local-stats.csv local-real-stats.csv; do
-          if [ -f "$csv_file" ]; then
-            echo "Validating $csv_file headers..."
-            if head -1 "$csv_file" | grep -q "platform,package_name"; then
-              echo "✅ $csv_file has expected headers"
-            else
-              echo "❌ $csv_file missing expected headers"
-            fi
-          fi
-        done 
+        echo "=== Validating stats.json ==="
+        test -f stats.json || (echo "❌ stats.json not found" && exit 1)
+        jq -e 'type == "array" and length >= 1' stats.json > /dev/null || (echo "❌ stats.json not in expected format" && exit 1)
